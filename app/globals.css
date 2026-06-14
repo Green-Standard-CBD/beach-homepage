@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #FDFAF6;
+  color: #2A2520;
+}
+
+@keyframes heroFade {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.hero-line-1 { animation: heroFade 1.2s cubic-bezier(0.4,0,0.2,1) 0.4s both; }
+.hero-line-2 { animation: heroFade 1.2s cubic-bezier(0.4,0,0.2,1) 0.7s both; }
+.hero-line-3 { animation: heroFade 1.2s cubic-bezier(0.4,0,0.2,1) 1.0s both; }
+.hero-line-4 { animation: heroFade 1.0s cubic-bezier(0.4,0,0.2,1) 1.4s both; }
+
+/* PrivateRoomSlider: Swiper pagination dots */
+.private-room-swiper .swiper-pagination-bullet {
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 1;
+  transition: background 0.3s, transform 0.3s;
+}
+.private-room-swiper .swiper-pagination-bullet-active {
+  background: #ffffff;
+  transform: scale(1.4);
+}
