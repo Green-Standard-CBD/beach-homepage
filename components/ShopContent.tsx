@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Product } from '@/app/shop/page'
@@ -37,6 +37,24 @@ type Props = { products: Product[] }
 
 export default function ShopContent({ products }: Props) {
   const [activeCategory, setActiveCategory] = useState<Category>('all')
+  const touchStartX = useRef<number | null>(null)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const diff = touchStartX.current - e.changedTouches[0].clientX
+    if (Math.abs(diff) < 50) return // 50px未満は誤操作防止
+    const idx = categories.findIndex(c => c.value === activeCategory)
+    if (diff > 0 && idx < categories.length - 1) {
+      setActiveCategory(categories[idx + 1].value)
+    } else if (diff < 0 && idx > 0) {
+      setActiveCategory(categories[idx - 1].value)
+    }
+    touchStartX.current = null
+  }
 
   const allProducts = [
     ...products.filter((p) => p.category !== 'goods'),
@@ -80,8 +98,12 @@ export default function ShopContent({ products }: Props) {
         </div>
       )}
 
-      {/* 商品グリッド */}
-      <div className="max-w-6xl mx-auto px-6 py-16">
+      {/* 商品グリッド（スマホ: 左右スワイプでカテゴリ変更） */}
+      <div
+        className="max-w-6xl mx-auto px-6 py-16"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <p className="text-[11px] text-sand-400 tracking-[0.2em] mb-10">{filtered.length} 件</p>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-14">
           {filtered.map((product) => (
