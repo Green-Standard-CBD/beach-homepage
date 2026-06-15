@@ -11,15 +11,8 @@ body {
   color: #2A2520;
 }
 
-@keyframes heroFade {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: none; }
-}
-
-.hero-line-1 { animation: heroFade 1.2s cubic-bezier(0.4,0,0.2,1) 0.4s both; }
-.hero-line-2 { animation: heroFade 1.2s cubic-bezier(0.4,0,0.2,1) 0.7s both; }
-.hero-line-3 { animation: heroFade 1.2s cubic-bezier(0.4,0,0.2,1) 1.0s both; }
-.hero-line-4 { animation: heroFade 1.0s cubic-bezier(0.4,0,0.2,1) 1.4s both; }
+/* hero lines: initial state (GSAP handles the animation) */
+.hero-line-1, .hero-line-2, .hero-line-3, .hero-line-4 { opacity: 0; }
 
 /* PrivateRoomSlider: Swiper pagination dots */
 .private-room-swiper .swiper-pagination-bullet {

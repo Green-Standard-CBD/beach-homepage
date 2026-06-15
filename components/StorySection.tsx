@@ -36,6 +36,13 @@ export default function StorySection() {
       const logoH = isPc ? inner.offsetHeight : inner.offsetHeight / 2
       const wh    = window.innerHeight
 
+      // ヒーローテキスト入場アニメーション（CSS ではなく GSAP で管理）
+      gsap.set(['.hero-line-1', '.hero-line-2', '.hero-line-3', '.hero-line-4'], { y: 24 })
+      gsap.to('.hero-line-1', { opacity: 1, y: 0, duration: 1.2, delay: 0.4, ease: 'power2.inOut' })
+      gsap.to('.hero-line-2', { opacity: 1, y: 0, duration: 1.2, delay: 0.7, ease: 'power2.inOut' })
+      gsap.to('.hero-line-3', { opacity: 1, y: 0, duration: 1.2, delay: 1.0, ease: 'power2.inOut' })
+      gsap.to('.hero-line-4', { opacity: 1, y: 0, duration: 1.0, delay: 1.4, ease: 'power2.inOut' })
+
       // ロゴ: 1画面分スクロールで blur・fade・上昇
       gsap.timeline({
         scrollTrigger: {
@@ -191,16 +198,16 @@ export default function StorySection() {
         style={{ zIndex: 20 }}
       >
         <div ref={kvLogoInnerRef} className="text-center text-white px-6">
-          <p className="hero-line-1 text-[10px] tracking-[0.5em] opacity-70 mb-8">
+          <p className="hero-line-1 font-serif text-[20px] tracking-[0.5em] opacity-70 mb-2">
             千葉県船橋市習志野台
           </p>
-          <h1 className="hero-line-2 font-serif text-[7rem] md:text-[15rem] font-semibold tracking-[0.05em] leading-none mb-2">
+          <h1 className="hero-line-2 font-serif text-[7rem] md:text-[15rem] font-semibold tracking-[0.05em] leading-none mb-2 mt-8">
             BEACH
           </h1>
-          <p className="hero-line-3 font-serif text-[2rem] md:text-[7rem] italic font-light tracking-[0.2em]">
+          <p className="hero-line-3 font-serif text-[1.6rem] md:text-[3.5rem] italic font-light tracking-[0.45em]">
             Hairsalon &amp; cafe
           </p>
-          <div className="hero-line-4 mt-14 flex justify-center opacity-40 animate-bounce">
+          <div className="hero-line-4 mt-6 flex justify-center opacity-40 animate-bounce">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
               <path d="M12 5v14M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
