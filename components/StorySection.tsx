@@ -37,10 +37,6 @@ export default function StorySection() {
       const logoH = isPc ? inner.offsetHeight : inner.offsetHeight / 2
       const wh    = window.innerHeight
 
-      // スマホ: スクロール正規化でカクカク防止
-      if (isMobile) {
-        ScrollTrigger.normalizeScroll(true)
-      }
 
       // ヒーローテキスト入場アニメーション（CSS ではなく GSAP で管理）
       gsap.set(['.hero-line-1', '.hero-line-2', '.hero-line-3', '.hero-line-4'], { y: 24 })

@@ -9,6 +9,7 @@ html {
 body {
   background-color: #FDFAF6;
   color: #2A2520;
+  overflow-x: hidden;
 }
 
 /* hero lines: initial state (GSAP handles the animation) */
