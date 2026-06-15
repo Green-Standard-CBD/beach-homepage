@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Product } from '@/app/shop/page'
@@ -70,54 +70,115 @@ type Props = { products: Product[] }
 
 export default function ShopContent({ products }: Props) {
   const [activeCategory, setActiveCategory] = useState<Category>('all')
+  // tabKey はタブクリック時のみ変化 → slide-from-right/left アニメーションを発火
+  // スワイプ時は変化させない → メイングリッドが余計なアニメーションをしない
+  const [tabKey, setTabKey] = useState<string>('tab-all')
   const [slideDir, setSlideDir] = useState<'right' | 'left'>('right')
   const [swipeOverlay, setSwipeOverlay] = useState<{
     exitProducts: AnyProduct[]
+    enterProducts: AnyProduct[]
     exitCls: string
     enterCls: string
   } | null>(null)
-  const touchStartX = useRef<number | null>(null)
 
-  const allProducts: AnyProduct[] = [
+  const containerRef = useRef<HTMLDivElement>(null)
+  // ref で activeCategory を追跡（useEffect 内のクロージャがステールになるのを防ぐ）
+  const activeCategoryRef = useRef<Category>('all')
+
+  useEffect(() => {
+    activeCategoryRef.current = activeCategory
+  }, [activeCategory])
+
+  const buildAllProducts = (): AnyProduct[] => [
     ...products.filter((p) => p.category !== 'goods'),
     ...PLANT_PRODUCTS,
     ...products.filter((p) => p.category === 'goods'),
   ]
+
+  const allProducts = buildAllProducts()
 
   const getFiltered = (cat: Category): AnyProduct[] =>
     cat === 'all' ? allProducts : allProducts.filter((p) => p.category === cat)
 
   const filtered = getFiltered(activeCategory)
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-  }
+  // useEffect で touchmove を {passive: false} 登録
+  // → iOS でも横スワイプ中の縦スクロールを確実にブロックできる
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return
-    const diff = touchStartX.current - e.changedTouches[0].clientX
-    touchStartX.current = null
-    if (Math.abs(diff) < 50) return
+    // products は変わらないのでクロージャ内で安全に再計算
+    const getAllProducts = (): AnyProduct[] => [
+      ...products.filter((p) => p.category !== 'goods'),
+      ...PLANT_PRODUCTS,
+      ...products.filter((p) => p.category === 'goods'),
+    ]
+    const getFilteredLocal = (cat: Category): AnyProduct[] => {
+      const all = getAllProducts()
+      return cat === 'all' ? all : all.filter((p) => p.category === cat)
+    }
 
-    const idx = categories.findIndex(c => c.value === activeCategory)
-    let newIdx = -1
-    if (diff > 0 && idx < categories.length - 1) newIdx = idx + 1
-    else if (diff < 0 && idx > 0) newIdx = idx - 1
-    if (newIdx === -1) return
+    let startX = 0
+    let startY = 0
+    let dirLocked: 'horizontal' | 'vertical' | null = null
 
-    const newCat = categories[newIdx].value
-    const dir = diff > 0 ? 'right' : 'left'
+    const onStart = (e: TouchEvent) => {
+      startX = e.touches[0].clientX
+      startY = e.touches[0].clientY
+      dirLocked = null
+    }
 
-    setSwipeOverlay({
-      exitProducts: getFiltered(activeCategory),
-      exitCls: dir === 'right' ? 'swipe-exit-to-left' : 'swipe-exit-to-right',
-      enterCls: dir === 'right' ? 'swipe-in-from-right' : 'swipe-in-from-left',
-    })
-    setSlideDir(dir)
-    setActiveCategory(newCat)
+    const onMove = (e: TouchEvent) => {
+      const dx = Math.abs(e.touches[0].clientX - startX)
+      const dy = Math.abs(e.touches[0].clientY - startY)
+      // 8px 以上動いた時点で方向を確定
+      if (dirLocked === null && (dx > 8 || dy > 8)) {
+        dirLocked = dx > dy ? 'horizontal' : 'vertical'
+      }
+      // 横方向と判定したら縦スクロールをブロック
+      if (dirLocked === 'horizontal') {
+        e.preventDefault()
+      }
+    }
 
-    setTimeout(() => setSwipeOverlay(null), 350)
-  }
+    const onEnd = (e: TouchEvent) => {
+      if (dirLocked !== 'horizontal') return
+      const diff = startX - e.changedTouches[0].clientX
+      if (Math.abs(diff) < 50) return
+
+      const curCat = activeCategoryRef.current
+      const idx = categories.findIndex(c => c.value === curCat)
+      let newIdx = -1
+      if (diff > 0 && idx < categories.length - 1) newIdx = idx + 1
+      else if (diff < 0 && idx > 0) newIdx = idx - 1
+      if (newIdx === -1) return
+
+      const newCat = categories[newIdx].value
+      const isLeft = diff > 0
+
+      setSwipeOverlay({
+        exitProducts: getFilteredLocal(curCat),
+        enterProducts: getFilteredLocal(newCat),
+        exitCls: isLeft ? 'swipe-exit-to-left' : 'swipe-exit-to-right',
+        enterCls: isLeft ? 'swipe-in-from-right' : 'swipe-in-from-left',
+      })
+      setActiveCategory(newCat)
+      // tabKey は変えない → メイングリッドのタブ用スライドアニメーションが発火しない
+
+      setTimeout(() => setSwipeOverlay(null), 350)
+    }
+
+    el.addEventListener('touchstart', onStart, { passive: true })
+    el.addEventListener('touchmove', onMove, { passive: false })
+    el.addEventListener('touchend', onEnd, { passive: true })
+
+    return () => {
+      el.removeEventListener('touchstart', onStart)
+      el.removeEventListener('touchmove', onMove)
+      el.removeEventListener('touchend', onEnd)
+    }
+  }, [products])
 
   return (
     <>
@@ -132,6 +193,7 @@ export default function ShopContent({ products }: Props) {
                 const next = categories.findIndex(c => c.value === cat.value)
                 setSlideDir(next > cur ? 'right' : 'left')
                 setActiveCategory(cat.value)
+                setTabKey(`tab-${cat.value}`)  // タブクリック時のみ変化
               }}
               className={`text-[11px] tracking-[0.3em] whitespace-nowrap transition-colors duration-200 pb-1 ${
                 activeCategory === cat.value
@@ -156,32 +218,28 @@ export default function ShopContent({ products }: Props) {
         </div>
       )}
 
-      {/* 商品グリッド: touch-pan-y でCSSレベルの方向ロック（横スワイプ中は縦スクロール禁止） */}
-      <div
-        className="max-w-6xl mx-auto px-6 py-16 touch-pan-y"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+      {/* 商品グリッド */}
+      <div ref={containerRef} className="max-w-6xl mx-auto px-6 py-16">
         <p className="text-[11px] text-sand-400 tracking-[0.2em] mb-10">{filtered.length} 件</p>
         <div className="relative overflow-hidden">
-          {/* メイングリッド: タブクリック時に 32px スライドアニメーション（PC・スマホ共通・変更なし） */}
+          {/* メイングリッド: key=tabKey のみ変化（タブクリック時だけ slide アニメーション） */}
           <div
-            key={activeCategory}
+            key={tabKey}
             className={slideDir === 'right' ? 'slide-from-right' : 'slide-from-left'}
           >
             <ProductGrid products={filtered} />
           </div>
 
-          {/* スワイプオーバーレイ: スマホスワイプ時のみ、100%幅フルスライドでメイングリッドを上書き */}
+          {/* スワイプ専用オーバーレイ（スワイプ中のみ表示） */}
           {swipeOverlay && (
             <>
-              {/* 退場: 旧コンテンツが画面外へ出る */}
+              {/* 退場: z-20（手前）で旧コンテンツが画面外へ */}
               <div className={`absolute inset-0 bg-cream z-20 ${swipeOverlay.exitCls}`}>
                 <ProductGrid products={swipeOverlay.exitProducts} />
               </div>
-              {/* 入場: 新コンテンツが画面外から入る */}
+              {/* 入場: z-10（奥）で新コンテンツが画面外から入る */}
               <div className={`absolute inset-0 bg-cream z-10 ${swipeOverlay.enterCls}`}>
-                <ProductGrid products={filtered} />
+                <ProductGrid products={swipeOverlay.enterProducts} />
               </div>
             </>
           )}
