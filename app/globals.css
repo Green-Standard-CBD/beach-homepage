@@ -21,7 +21,7 @@ body {
   max-width: 100% !important;
 }
 
-/* ショップページ カテゴリ切り替えスライドアニメーション */
+/* ショップページ カテゴリ切り替えスライドアニメーション（タブクリック用・32px） */
 @keyframes slideInFromRight {
   from { transform: translateX(32px); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
@@ -32,6 +32,16 @@ body {
 }
 .slide-from-right { animation: slideInFromRight 0.28s ease-out; }
 .slide-from-left  { animation: slideInFromLeft  0.28s ease-out; }
+
+/* ショップページ スワイプ専用（スマホのみ）: 100%幅フルスライド */
+@keyframes swipeInFromRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes swipeInFromLeft  { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes swipeExitToLeft  { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes swipeExitToRight { from { transform: translateX(0); } to { transform: translateX(100%); } }
+.swipe-in-from-right { animation: swipeInFromRight 0.3s ease-out; }
+.swipe-in-from-left  { animation: swipeInFromLeft  0.3s ease-out; }
+.swipe-exit-to-left  { animation: swipeExitToLeft  0.3s ease-in; }
+.swipe-exit-to-right { animation: swipeExitToRight 0.3s ease-in; }
 
 /* hero lines: initial state (GSAP handles the animation) */
 .hero-line-1, .hero-line-2, .hero-line-3, .hero-line-4 { opacity: 0; }
