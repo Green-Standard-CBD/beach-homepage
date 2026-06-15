@@ -197,7 +197,7 @@ export default function StorySection() {
           <h1 className="hero-line-2 font-serif text-[7rem] md:text-[15rem] font-semibold tracking-[0.05em] leading-none mb-2">
             BEACH
           </h1>
-          <p className="hero-line-3 font-serif text-xl md:text-3xl italic font-light tracking-[0.5em]">
+          <p className="hero-line-3 font-serif text-[2rem] md:text-[7rem] italic font-light tracking-[0.2em]">
             Hairsalon &amp; cafe
           </p>
           <div className="hero-line-4 mt-14 flex justify-center opacity-40 animate-bounce">
