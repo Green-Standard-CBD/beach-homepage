@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 
 export default function FloatingBooking() {
-  const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
+  const isHomepage = pathname === '/'
+  const [scrolled, setScrolled] = useState(!isHomepage)
 
   useEffect(() => {
+    if (!isHomepage) return  // ホームページ以外は常にベージュ
     const onScroll = () => {
       const kvCard = document.getElementById('kv-card')
       if (!kvCard) return
