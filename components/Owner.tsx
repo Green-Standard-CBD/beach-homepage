@@ -10,7 +10,7 @@ export default function Owner() {
           {/* 写真 */}
           <div className="relative w-64 h-80 md:w-72 md:h-96 flex-shrink-0 overflow-hidden">
             <Image
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=90&auto=format&fit=crop&crop=face"
+              src="/images/owner.png"
               alt="藤野翔"
               fill
               className="object-cover grayscale"
