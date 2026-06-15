@@ -7,19 +7,19 @@ const brands = [
     tag: 'N.',
     name: 'エヌドット',
     desc: 'スタイリング・シャンプー・トリートメントを展開。洗練されたパッケージと確かな品質で、全国に多くのファンを持つサロン専売ブランド。',
-    img: 'https://images.unsplash.com/photo-1760895535234-2c39c57cf187?w=600&q=85&auto=format&fit=crop',
+    img: 'https://kmjozngwulcsnlpqpgoq.supabase.co/storage/v1/object/public/products/balm/citrus-jasmine/1.jpg',
   },
   {
     tag: 'NOTE by N.',
     name: 'ノート バイ エヌドット',
     desc: 'アミノ酸系シャンプー・トリートメント。髪と頭皮にやさしい成分で、毎日のヘアケアをよりリッチに。',
-    img: 'https://images.unsplash.com/photo-1760862652442-e8ff7ebdd2f8?w=600&q=85&auto=format&fit=crop',
+    img: 'https://kmjozngwulcsnlpqpgoq.supabase.co/storage/v1/object/public/products/note-oil/classique-figue/1.jpg',
   },
   {
     tag: 'APUSEL',
     name: 'アプルセル',
     desc: 'スキャルプケアに特化したシャンプー・トリートメント。頭皮環境を整え、健やかな美髪をサポートします。',
-    img: 'https://images.unsplash.com/photo-1760895535234-2c39c57cf187?w=600&q=85&auto=format&fit=crop',
+    img: 'https://kmjozngwulcsnlpqpgoq.supabase.co/storage/v1/object/public/products/apusel/treatment_1.png',
   },
 ]
 

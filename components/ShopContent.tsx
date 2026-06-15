@@ -38,7 +38,11 @@ type Props = { products: Product[] }
 export default function ShopContent({ products }: Props) {
   const [activeCategory, setActiveCategory] = useState<Category>('all')
 
-  const allProducts = [...products, ...PLANT_PRODUCTS]
+  const allProducts = [
+    ...products.filter((p) => p.category !== 'goods'),
+    ...PLANT_PRODUCTS,
+    ...products.filter((p) => p.category === 'goods'),
+  ]
 
   const filtered = activeCategory === 'all'
     ? allProducts
