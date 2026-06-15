@@ -40,7 +40,7 @@ export default function Owner() {
             <div className="mt-12 pt-8 border-t border-sand-200">
               <p className="text-[10px] tracking-[0.3em] text-sand-400 mb-4">QUALIFICATION</p>
               <p className="text-xs text-sand-500 leading-7">
-                美容師免許 / ヘッドスパスペシャリスト
+                美容師免許 / 薄毛・スカルプケアスペシャリスト / 髪質改善アドバイザー
               </p>
             </div>
           </div>

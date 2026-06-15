@@ -8,20 +8,20 @@ import 'swiper/css/effect-fade'
 
 const slides = [
   {
-    src: 'https://images.unsplash.com/photo-1630595271375-5073a6c0638b?w=1200&q=90&auto=format&fit=crop',
+    src: 'https://images.unsplash.com/photo-1695527082039-5f96003b97e4?w=1200&q=90&auto=format&fit=crop',
     alt: '個室サロン',
   },
   {
-    src: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&q=90&auto=format&fit=crop',
-    alt: '施術スペース',
+    src: 'https://images.unsplash.com/photo-1695527081793-91a2d4b5b103?w=1200&q=90&auto=format&fit=crop',
+    alt: '個室サロン',
   },
   {
-    src: 'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?w=1200&q=90&auto=format&fit=crop',
-    alt: 'ヘッドスパ',
+    src: 'https://images.unsplash.com/photo-1632320666488-83eb892be88f?w=1200&q=90&auto=format&fit=crop',
+    alt: '個室サロン',
   },
   {
     src: 'https://images.unsplash.com/photo-1600948836101-f9ffda59d250?w=1200&q=90&auto=format&fit=crop',
-    alt: 'プライベートルーム',
+    alt: '個室サロン',
   },
 ]
 

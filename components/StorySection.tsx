@@ -283,7 +283,8 @@ export default function StorySection() {
             </p>
             <p className="text-sm leading-9 text-sand-500">
               騒がしい日常から少し離れて、<br />
-              静かで豊かな時間をご用意しています。
+              静かで豊かな時間をご用意しています。<br />
+              <span className="text-[11px] text-sand-300">※ 画像は準備中のためイメージです</span>
             </p>
           </div>
         </div>
