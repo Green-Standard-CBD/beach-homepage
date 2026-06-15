@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ヘッドスパ・トリートメント写真セレクター</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #f5f0eb; padding: 24px; }
+  h1 { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 6px; }
+  p { font-size: 13px; color: #666; margin-bottom: 16px; }
+  .section-title { font-size: 11px; color: #888; letter-spacing: 0.1em; font-weight: 700; text-transform: uppercase; margin: 18px 0 10px; }
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .card {
+    position: relative; cursor: pointer; border-radius: 8px; overflow: hidden;
+    border: 3px solid transparent; transition: border-color 0.2s, transform 0.15s; background: #ddd;
+  }
+  .card:hover { transform: scale(1.02); }
+  .card.selected { border-color: #c8a96e; }
+  .card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; }
+  .card .check {
+    position: absolute; top: 6px; right: 6px; width: 26px; height: 26px;
+    border-radius: 50%; background: #c8a96e; color: white; font-size: 13px;
+    display: none; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .card.selected .check { display: flex; }
+  .card .label {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.55); color: white; font-size: 10px; padding: 5px 7px; line-height: 1.4;
+  }
+  .footer { margin-top: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .count { font-size: 14px; color: #555; }
+  button { background: #c8a96e; color: white; border: none; padding: 10px 22px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+  button:hover { background: #b8965a; }
+  .result { margin-top: 16px; background: white; border-radius: 8px; padding: 14px; font-size: 12px; font-family: monospace; white-space: pre-wrap; word-break: break-all; color: #333; display: none; }
+</style>
+</head>
+<body>
+<h1>ヘッドスパ・トリートメント — 写真セレクター</h1>
+<p>使いたい写真をクリック（複数OK）→「Claudeに渡す」。①〜⑤は同じシリーズ（同一人物・同一サロン）です。</p>
+
+<div class="section-title">▶ ヘッドスパシリーズ（同一サロン・5バリエーション）</div>
+<div class="grid" id="grid-a"></div>
+
+<div class="section-title">▶ 別サロン・別シーン（5枚）</div>
+<div class="grid" id="grid-b"></div>
+
+<div class="footer">
+  <span class="count" id="count">0枚選択中</span>
+  <button onclick="showResult()">Claudeに渡す</button>
+</div>
+<div class="result" id="result"></div>
+
+<script>
+const groupA = [
+  { id: '1717160675489-7779f2c91999', label: '① セラム塗布' },
+  { id: '1717160675158-fdd75b8595cf', label: '② スチームスパ' },
+  { id: '1717160676422-155f41965293', label: '③ フェイスラップ（最高級感）' },
+  { id: '1717160675643-53a7a2ebaa9f', label: '④ すすぎ' },
+  { id: '1717160675332-1a8d1080ae3d', label: '⑤ トリートメント剤' },
+];
+
+const groupB = [
+  { id: '1761718210089-ba3bb5ccb54f', label: 'A  フェイシャルトリートメント' },
+  { id: '1634449571010-02389ed0f9b0', label: 'B  カット施術（ブロンド）' },
+  { id: '1648313143853-aa913f6ad44a', label: 'C  シャンプー台（水色・別サロン）' },
+  { id: '1666864694143-b43c8f1b8c66', label: 'D  ヘッドマッサージ（ミニマル）' },
+  { id: '1562259920-47afc3030ba2', label: 'E  ブローアウト施術' },
+];
+
+const selected = new Set();
+
+function makeGrid(photos, gridId) {
+  const grid = document.getElementById(gridId);
+  photos.forEach(photo => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <img src="https://images.unsplash.com/photo-${photo.id}?w=600&q=80&auto=format&fit=crop" loading="lazy">
+      <span class="check">✓</span>
+      <div class="label">${photo.label}</div>
+    `;
+    card.addEventListener('click', () => {
+      if (selected.has(photo.id)) { selected.delete(photo.id); card.classList.remove('selected'); }
+      else { selected.add(photo.id); card.classList.add('selected'); }
+      document.getElementById('count').textContent = `${selected.size}枚選択中`;
+    });
+    grid.appendChild(card);
+  });
+}
+
+makeGrid(groupA, 'grid-a');
+makeGrid(groupB, 'grid-b');
+
+function showResult() {
+  const all = [...groupA, ...groupB];
+  const text = all.filter(p => selected.has(p.id)).map(p =>
+    `{ src: 'https://images.unsplash.com/photo-${p.id}?w=1200&q=90&auto=format&fit=crop', alt: 'トリートメント' }`
+  ).join(',\n');
+  const el = document.getElementById('result');
+  el.style.display = 'block';
+  el.textContent = text || '（未選択）';
+}
+</script>
+</body>
+</html>

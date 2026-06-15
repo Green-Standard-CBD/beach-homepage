@@ -160,6 +160,8 @@ export default function ReservationManager() {
   const [containerW, setContainerW]   = useState(0)
   const [newResModal, setNewResModal] = useState<{ stylist: Stylist; time: string } | null>(null)
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [hpSyncing, setHpSyncing] = useState(false)
+  const [hpLastSync, setHpLastSync] = useState<string | null>(null)
   const mainAreaRef = useRef<HTMLDivElement>(null)
 
   // localStorage で既読IDを永続管理
@@ -221,6 +223,26 @@ export default function ReservationManager() {
   }, [fetchAllUnread, fetchAllReservations])
 
   useEffect(() => { fetchRes(date) }, [date, fetchRes])
+
+  // HP手動同期（admin認証済みエンドポイント経由）
+  async function runHpSync() {
+    setHpSyncing(true)
+    try {
+      const res = await fetch('/api/admin/hp-sync', { method: 'POST' })
+      const json = await res.json()
+      const now = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+      setHpLastSync(`${now} (新着${json.inserted ?? 0}件)`)
+      if ((json.inserted ?? 0) > 0 || (json.cancelled ?? 0) > 0) {
+        fetchRes(date)
+        fetchAllUnread()
+        fetchAllReservations()
+      }
+    } catch {
+      setHpLastSync('エラー')
+    } finally {
+      setHpSyncing(false)
+    }
+  }
 
   async function updateStatus(id: string, status: Status) {
     setUpdating(true)
@@ -384,10 +406,25 @@ export default function ReservationManager() {
                   viewMode === 'short' ? 'bg-cream/20 text-cream' : 'text-cream/50 hover:text-cream/80'
                 }`}>短縮</button>
             </div>
-            <button onClick={() => { fetchRes(date); fetchAllUnread(); fetchAllReservations() }}
-              className="ml-auto text-[11px] bg-cream/10 border border-cream/30 px-4 py-1.5 rounded hover:bg-cream/20 transition-colors">
-              最新情報に更新
-            </button>
+            <div className="ml-auto flex items-center gap-2">
+              {/* HP手動同期ボタン */}
+              <div className="flex flex-col items-end">
+                <button
+                  onClick={runHpSync}
+                  disabled={hpSyncing}
+                  className="text-[11px] bg-orange-500/80 border border-orange-300/40 px-4 py-1.5 rounded hover:bg-orange-500 transition-colors text-white disabled:opacity-50"
+                >
+                  {hpSyncing ? '同期中...' : 'HP同期'}
+                </button>
+                {hpLastSync && (
+                  <span className="text-[9px] text-cream/50 mt-0.5">{hpLastSync}</span>
+                )}
+              </div>
+              <button onClick={() => { fetchRes(date); fetchAllUnread(); fetchAllReservations() }}
+                className="text-[11px] bg-cream/10 border border-cream/30 px-4 py-1.5 rounded hover:bg-cream/20 transition-colors">
+                更新
+              </button>
+            </div>
           </>
         )}
       </header>

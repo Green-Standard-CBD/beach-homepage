@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { after } from 'next/server'
+import { shouldRunHpSync, markHpSyncDone } from '@/lib/redis'
 
 const adminClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,6 +16,20 @@ function isAuthed(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   if (!isAuthed(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // admin画面ロード時にバックグラウンドで自動同期（レスポンス後に実行・管理者UXに影響なし）
+  after(async () => {
+    try {
+      if (await shouldRunHpSync()) {
+        await markHpSyncDone()
+        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/cron/hotpepper-sync`, {
+          headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+        })
+      }
+    } catch (e) {
+      console.error('[auto hp-sync]', e)
+    }
+  })
 
   const { searchParams } = new URL(req.url)
   const date = searchParams.get('date')

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { fetchHotpepperEmails } from '@/lib/hotpepper-gmail'
+import { markHpSyncDone } from '@/lib/redis'
 
 const adminClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -79,6 +80,8 @@ export async function GET(request: Request) {
       }
     }
 
+    // どのトリガー経由でも実行時刻を記録（admin自動同期の重複防止）
+    await markHpSyncDone().catch(() => {})
     return NextResponse.json({ ok: true, ...results })
   } catch (err) {
     console.error('Hotpepper sync error:', err)
