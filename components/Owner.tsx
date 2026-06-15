@@ -8,7 +8,7 @@ export default function Owner() {
 
         <div className="flex flex-col md:flex-row gap-12 lg:gap-20 items-center">
           {/* 写真 */}
-          <div className="relative w-64 h-80 md:w-72 md:h-96 flex-shrink-0 overflow-hidden">
+          <div className="relative w-64 h-80 md:w-72 md:h-96 flex-shrink-0 overflow-hidden mb-20">
             <Image
               src="/images/owner.png"
               alt="藤野翔"
