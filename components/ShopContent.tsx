@@ -37,6 +37,7 @@ type Props = { products: Product[] }
 
 export default function ShopContent({ products }: Props) {
   const [activeCategory, setActiveCategory] = useState<Category>('all')
+  const [slideDir, setSlideDir] = useState<'right' | 'left'>('right')
   const touchStartX = useRef<number | null>(null)
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -46,11 +47,13 @@ export default function ShopContent({ products }: Props) {
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return
     const diff = touchStartX.current - e.changedTouches[0].clientX
-    if (Math.abs(diff) < 50) return // 50px未満は誤操作防止
+    if (Math.abs(diff) < 50) return
     const idx = categories.findIndex(c => c.value === activeCategory)
     if (diff > 0 && idx < categories.length - 1) {
+      setSlideDir('right')
       setActiveCategory(categories[idx + 1].value)
     } else if (diff < 0 && idx > 0) {
+      setSlideDir('left')
       setActiveCategory(categories[idx - 1].value)
     }
     touchStartX.current = null
@@ -105,7 +108,10 @@ export default function ShopContent({ products }: Props) {
         onTouchEnd={handleTouchEnd}
       >
         <p className="text-[11px] text-sand-400 tracking-[0.2em] mb-10">{filtered.length} 件</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-14">
+        <div
+          key={activeCategory}
+          className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-14 ${slideDir === 'right' ? 'slide-from-right' : 'slide-from-left'}`}
+        >
           {filtered.map((product) => (
             <Link key={product.id} href={`/shop/${product.id}`} className="group flex flex-col">
               <div className="relative aspect-square overflow-hidden bg-sand-100 mb-4">

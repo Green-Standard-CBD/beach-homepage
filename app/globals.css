@@ -21,6 +21,18 @@ body {
   max-width: 100% !important;
 }
 
+/* ショップページ カテゴリ切り替えスライドアニメーション */
+@keyframes slideInFromRight {
+  from { transform: translateX(32px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes slideInFromLeft {
+  from { transform: translateX(-32px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+.slide-from-right { animation: slideInFromRight 0.28s ease-out; }
+.slide-from-left  { animation: slideInFromLeft  0.28s ease-out; }
+
 /* hero lines: initial state (GSAP handles the animation) */
 .hero-line-1, .hero-line-2, .hero-line-3, .hero-line-4 { opacity: 0; }
 
