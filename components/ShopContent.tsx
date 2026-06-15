@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Product } from '@/app/shop/page'
@@ -77,33 +77,6 @@ export default function ShopContent({ products }: Props) {
     enterCls: string
   } | null>(null)
   const touchStartX = useRef<number | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  // 横スワイプ中は縦スクロールをブロック（passive: false が必要なため useEffect で登録）
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    let sx = 0, sy = 0, axis: 'x' | 'y' | null = null
-
-    const onStart = (e: TouchEvent) => {
-      sx = e.touches[0].clientX
-      sy = e.touches[0].clientY
-      axis = null
-    }
-    const onMove = (e: TouchEvent) => {
-      const dx = Math.abs(e.touches[0].clientX - sx)
-      const dy = Math.abs(e.touches[0].clientY - sy)
-      if (!axis && (dx > 5 || dy > 5)) axis = dx > dy ? 'x' : 'y'
-      if (axis === 'x') e.preventDefault()
-    }
-
-    el.addEventListener('touchstart', onStart, { passive: true })
-    el.addEventListener('touchmove', onMove, { passive: false })
-    return () => {
-      el.removeEventListener('touchstart', onStart)
-      el.removeEventListener('touchmove', onMove)
-    }
-  }, [])
 
   const allProducts: AnyProduct[] = [
     ...products.filter((p) => p.category !== 'goods'),
@@ -183,10 +156,9 @@ export default function ShopContent({ products }: Props) {
         </div>
       )}
 
-      {/* 商品グリッド */}
+      {/* 商品グリッド: touch-pan-y でCSSレベルの方向ロック（横スワイプ中は縦スクロール禁止） */}
       <div
-        ref={containerRef}
-        className="max-w-6xl mx-auto px-6 py-16"
+        className="max-w-6xl mx-auto px-6 py-16 touch-pan-y"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
