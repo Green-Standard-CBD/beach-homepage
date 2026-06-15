@@ -25,10 +25,53 @@ export type HotpepperEmail = {
   amount: number | null
 }
 
-function parseDuration(text: string): number {
-  const hours = text.match(/(\d+)時間/)
-  const mins = text.match(/(\d+)分/)
-  return (hours ? parseInt(hours[1]) * 60 : 0) + (mins ? parseInt(mins[1]) : 0)
+// 店のメニュー基準によるブロック時間（Hotpepperの施術時間目安は使わない）
+function getShopBlockMinutes(menuSection: string): number {
+  const t = menuSection
+  // 複合メニュー（長い順に判定）
+  if (/縮毛矯正|ストレートパーマ/.test(t) && /カラー|マニキュア|ヘナ|白髪/.test(t)) return 420
+  if (/デジタルパーマ|デジパー/.test(t) && /カラー|マニキュア|ヘナ|白髪/.test(t)) return 390
+  if (/パーマ/.test(t) && /カラー|マニキュア|ヘナ|白髪/.test(t)) return 330
+  if (/縮毛矯正|ストレートパーマ/.test(t)) return 330
+  if (/デジタルパーマ|デジパー/.test(t)) return 300
+  if (/パーマ/.test(t)) return 240
+  if (/カラー|ヘアマニキュア|マニキュア|ヘナ|白髪染め|白髪カラー/.test(t)) return 210 // カットも含むと判断
+  if (/ヘッドスパ|スカルプスパ/.test(t)) return 120
+  if (/トリートメント/.test(t)) return 120
+  return 90 // カットのみ or 不明
+}
+
+// メニューセクションから実際のサービス名を抽出してわかりやすい名前を組み立てる
+function extractMenuName(menuSection: string): string {
+  const services: string[] = []
+
+  // カットの判定（カット別=カット有り・シャンプーブロー込み=カット有り・カット明記）
+  const impliesKatto = /カット|シャンプー.*ブロー|ブロー.*シャンプー/.test(menuSection)
+  if (impliesKatto) services.push('カット')
+
+  // カラー系（優先度順）
+  if (/ヘアマニキュア|マニキュア/.test(menuSection)) services.push('ヘアマニキュア')
+  else if (/ヘナ/.test(menuSection)) services.push('ヘナカラー')
+  else if (/白髪染め|白髪カラー/.test(menuSection)) services.push('白髪染め')
+  else if (/カラーリング|カラー/.test(menuSection)) services.push('カラー')
+
+  // パーマ系（優先度順）
+  if (/デジタルパーマ|デジパー/.test(menuSection)) services.push('デジタルパーマ')
+  else if (/縮毛矯正/.test(menuSection)) services.push('縮毛矯正')
+  else if (/ストレートパーマ/.test(menuSection)) services.push('ストレートパーマ')
+  else if (/パーマ/.test(menuSection)) services.push('パーマ')
+
+  // その他
+  if (/ヘッドスパ|スカルプスパ/.test(menuSection)) services.push('ヘッドスパ')
+  if (/トリートメント/.test(menuSection)) services.push('トリートメント')
+
+  if (services.length > 0) return services.join('＋')
+
+  // フォールバック：最初の意味のある行を使う
+  return menuSection.split('\n')
+    .map(l => l.trim())
+    .find(l => l && !l.startsWith('（') && !l.match(/^\d|^[¥￥]/))
+    ?? 'メニュー不明'
 }
 
 function parseDate(text: string): { date: string; time: string } | null {
@@ -48,8 +91,6 @@ function parseEmail(body: string): Omit<HotpepperEmail, 'gmailId'> | null {
   const guestRaw = body.match(/■氏名\s*\n\s*([^\n（]+)/)?.[1]?.trim()
   const guestName = guestRaw?.replace(/（.*）/, '').trim() ?? ''
   const dateRaw = body.match(/■来店日時\s*\n\s*([^\n]+)/)?.[1]?.trim() ?? ''
-  const menuName = body.match(/■メニュー\s*\n\s*([^\n]+)/)?.[1]?.trim() ?? ''
-  const durationRaw = body.match(/施術時間目安：([^\)）]+)/)?.[1]?.trim() ?? ''
   const stylistRaw = body.match(/■スタイリスト\s*\n\s*([^\n]+)/)?.[1]?.trim() ?? ''
   const amountRaw = body.match(/お支払い予定金額\s*(\d[\d,]+)円/)?.[1]
 
@@ -58,7 +99,13 @@ function parseEmail(body: string): Omit<HotpepperEmail, 'gmailId'> | null {
   const parsed = parseDate(dateRaw)
   if (!parsed) return null
 
-  const blockMinutes = parseDuration(durationRaw) || 60
+  // ■メニューセクション全体を取得（次の■まで）
+  const menuSectionMatch = body.match(/■メニュー\s*\n([\s\S]*?)(?=\n■)/)
+  const menuSection = menuSectionMatch?.[1] ?? ''
+
+  const menuName = extractMenuName(menuSection)
+  const blockMinutes = getShopBlockMinutes(menuSection)
+
   const stylistId = stylistRaw.includes('藤野') ? 'fujino' : null
   const amount = amountRaw ? parseInt(amountRaw.replace(/,/g, '')) : null
 
