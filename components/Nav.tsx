@@ -23,17 +23,14 @@ export default function Nav() {
   useEffect(() => {
     if (!isHomepage) return
     const onScroll = () => {
-      const isMobile = window.innerWidth < 768
-      if (isMobile) {
-        const hContents = document.getElementById('homeContents')
-        if (hContents) {
-          setScrolled(hContents.getBoundingClientRect().top <= 74)
-        }
+      const kvCard = document.getElementById('kv-card')
+      if (!kvCard) return
+      if (window.innerWidth < 768) {
+        // スマホ: kv-cardの上部がNavに触れたとき
+        setScrolled(window.scrollY >= kvCard.offsetTop - 74)
       } else {
-        const kvCard = document.getElementById('kv-card')
-        if (kvCard) {
-          setScrolled(window.scrollY > kvCard.offsetTop + kvCard.offsetHeight - 74)
-        }
+        // PC: kv-cardの下部がNavに触れたとき（従来どおり）
+        setScrolled(window.scrollY > kvCard.offsetTop + kvCard.offsetHeight - 74)
       }
     }
     window.addEventListener('scroll', onScroll, { passive: true })

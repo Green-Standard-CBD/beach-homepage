@@ -8,13 +8,17 @@ export default function FloatingBooking() {
 
   useEffect(() => {
     const onScroll = () => {
-      const hContents = document.getElementById('homeContents')
-      if (!hContents) return
-      const rect = hContents.getBoundingClientRect()
-      const isPc = window.innerWidth >= 768
-      // getBoundingClientRect().top はGSAPのtransformを含む実際の描画位置
-      const threshold = isPc ? window.innerHeight - 135 : 80
-      setScrolled(rect.top <= threshold)
+      const kvCard = document.getElementById('kv-card')
+      if (!kvCard) return
+      if (window.innerWidth < 768) {
+        // スマホ: kv-cardの上部がボタン位置(top-20=80px)に触れたとき
+        setScrolled(window.scrollY >= kvCard.offsetTop - 80)
+      } else {
+        // PC: homeContentsが画面下部に入ったとき（従来どおり）
+        const hContents = document.getElementById('homeContents')
+        if (!hContents) return
+        setScrolled(hContents.getBoundingClientRect().top <= window.innerHeight - 135)
+      }
     }
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
