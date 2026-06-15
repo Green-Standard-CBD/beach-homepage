@@ -40,8 +40,8 @@ body {
 @keyframes swipeExitToRight { from { transform: translateX(0); } to { transform: translateX(100%); } }
 .swipe-in-from-right { animation: swipeInFromRight 0.3s ease-out forwards; }
 .swipe-in-from-left  { animation: swipeInFromLeft  0.3s ease-out forwards; }
-.swipe-exit-to-left  { animation: swipeExitToLeft  0.3s ease-in  forwards; }
-.swipe-exit-to-right { animation: swipeExitToRight 0.3s ease-in  forwards; }
+.swipe-exit-to-left  { animation: swipeExitToLeft  0.15s ease-in  forwards; }
+.swipe-exit-to-right { animation: swipeExitToRight 0.15s ease-in  forwards; }
 
 /* hero lines: initial state (GSAP handles the animation) */
 .hero-line-1, .hero-line-2, .hero-line-3, .hero-line-4 { opacity: 0; }
