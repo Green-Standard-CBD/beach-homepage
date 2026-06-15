@@ -11,8 +11,8 @@ export default function FloatingBooking() {
       const kvCard = document.getElementById('kv-card')
       if (!kvCard) return
       if (window.innerWidth < 768) {
-        // スマホ: kv-cardの上部がボタン位置(top-20=80px)に触れたとき
-        setScrolled(window.scrollY >= kvCard.offsetTop - 80)
+        // スマホ: kv-cardがviewportの上部1/3に入ったとき（Navより126px早い）
+        setScrolled(window.scrollY >= kvCard.offsetTop - 200)
       } else {
         // PC: homeContentsが画面下部に入ったとき（従来どおり）
         const hContents = document.getElementById('homeContents')

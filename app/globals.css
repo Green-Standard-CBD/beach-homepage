@@ -4,12 +4,21 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 body {
   background-color: #FDFAF6;
   color: #2A2520;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
+/* GSAPのpin-spacerが横幅を超えるのを防ぐ */
+.pin-spacer {
+  overflow: hidden !important;
+  max-width: 100% !important;
 }
 
 /* hero lines: initial state (GSAP handles the animation) */
