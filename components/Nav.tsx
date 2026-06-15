@@ -23,9 +23,17 @@ export default function Nav() {
   useEffect(() => {
     if (!isHomepage) return
     const onScroll = () => {
-      const kvCard = document.getElementById('kv-card')
-      if (kvCard) {
-        setScrolled(window.scrollY > kvCard.offsetTop + kvCard.offsetHeight - 74)
+      const isMobile = window.innerWidth < 768
+      if (isMobile) {
+        const hContents = document.getElementById('homeContents')
+        if (hContents) {
+          setScrolled(hContents.getBoundingClientRect().top <= 74)
+        }
+      } else {
+        const kvCard = document.getElementById('kv-card')
+        if (kvCard) {
+          setScrolled(window.scrollY > kvCard.offsetTop + kvCard.offsetHeight - 74)
+        }
       }
     }
     window.addEventListener('scroll', onScroll, { passive: true })

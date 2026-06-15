@@ -33,8 +33,14 @@ export default function StorySection() {
 
     const ctx = gsap.context(() => {
       const isPc  = window.innerWidth >= 1024
+      const isMobile = window.innerWidth < 768
       const logoH = isPc ? inner.offsetHeight : inner.offsetHeight / 2
       const wh    = window.innerHeight
+
+      // スマホ: スクロール正規化でカクカク防止
+      if (isMobile) {
+        ScrollTrigger.normalizeScroll(true)
+      }
 
       // ヒーローテキスト入場アニメーション（CSS ではなく GSAP で管理）
       gsap.set(['.hero-line-1', '.hero-line-2', '.hero-line-3', '.hero-line-4'], { y: 24 })
@@ -121,8 +127,9 @@ export default function StorySection() {
         scrub: 2,
       }
 
+      // スマホはclip-path省略（GPU負荷が高くカクカクの原因）
       gsap.from(hCon, {
-        clipPath: `inset(${w / 10}px 60px 0 60px)`,
+        ...(isMobile ? {} : { clipPath: `inset(${w / 10}px 60px 0 60px)` }),
         y: 200,
         scrollTrigger: stConfig,
       })

@@ -24,7 +24,7 @@ export default function Owner() {
             <p className="text-[11px] tracking-[0.3em] text-sand-400 mb-10">FUJINO SHO — OWNER STYLIST</p>
 
             <p className="text-sm leading-9 text-sand-500 mb-6">
-              美容師として10年以上のキャリアを積み、<br />
+              美容師として20年以上のキャリアを積み、<br />
               千葉県船橋市にBEACH Hair Rescueをオープン。
             </p>
             <p className="text-sm leading-9 text-sand-500 mb-6">
