@@ -201,11 +201,11 @@ export default function StorySection() {
           <p className="hero-line-1 font-serif text-[20px] tracking-[0.5em] opacity-70 mb-2">
             千葉県船橋市習志野台
           </p>
-          <h1 className="hero-line-2 font-serif text-[7rem] md:text-[15rem] font-semibold tracking-[0.05em] leading-none mb-2 mt-8">
+          <h1 className="hero-line-2 font-serif text-[7rem] md:text-[15rem] font-semibold tracking-[0.05em] leading-none mb-0 mt-8">
             BEACH
           </h1>
-          <p className="hero-line-3 font-serif text-[1.6rem] md:text-[3.5rem] italic font-light tracking-[0.45em]">
-            Hairsalon &amp; cafe
+          <p className="hero-line-3 font-serif text-[1.6rem] md:text-[3.5rem] italic font-thin tracking-[0.45em] opacity-75">
+            hairsalon &amp; cafe
           </p>
           <div className="hero-line-4 mt-6 flex justify-center opacity-40 animate-bounce">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
