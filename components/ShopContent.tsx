@@ -166,7 +166,7 @@ export default function ShopContent({ products }: Props) {
       setActiveCategory(newCat)
       // tabKey は変えない → メイングリッドのタブ用スライドアニメーションが発火しない
 
-      setTimeout(() => setSwipeOverlay(null), 350)
+      setTimeout(() => setSwipeOverlay(null), 280)
     }
 
     el.addEventListener('touchstart', onStart, { passive: true })
@@ -233,12 +233,12 @@ export default function ShopContent({ products }: Props) {
           {/* スワイプ専用オーバーレイ（スワイプ中のみ表示） */}
           {swipeOverlay && (
             <>
-              {/* 退場: z-20（手前）で旧コンテンツが画面外へ */}
-              <div className={`absolute inset-0 bg-cream z-20 ${swipeOverlay.exitCls}`}>
+              {/* 旧コンテンツ: z-10（奥）静止 */}
+              <div className="absolute inset-0 bg-cream z-10">
                 <ProductGrid products={swipeOverlay.exitProducts} />
               </div>
-              {/* 入場: z-10（奥）で新コンテンツが画面外から入る */}
-              <div className={`absolute inset-0 bg-cream z-10 ${swipeOverlay.enterCls}`}>
+              {/* 新コンテンツ: z-20（手前）からスライドインして旧を覆い隠す */}
+              <div className={`absolute inset-0 bg-cream z-20 ${swipeOverlay.enterCls}`}>
                 <ProductGrid products={swipeOverlay.enterProducts} />
               </div>
             </>
