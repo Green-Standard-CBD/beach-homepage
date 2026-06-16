@@ -14,6 +14,7 @@ interface MenuItem {
   name: string
   price_label: string
   block_minutes: number
+  display_minutes: number
   category: Exclude<MenuCategory, 'all'>
   description: string
   price_type: PriceType
@@ -28,51 +29,51 @@ interface Member {
 // ========== Menu Data ==========
 const MENUS: MenuItem[] = [
   // カット
-  { id: 'cut',               name: 'カット',                   price_label: '¥4,500',        block_minutes: 90,  category: 'cut',       description: 'カット + ブロー仕上げ',        price_type: 'normal' },
-  { id: 'school_cut',        name: 'スクールカット',           price_label: '¥4,000',        block_minutes: 60,  category: 'cut',       description: '高校生以下対象',               price_type: 'normal' },
-  { id: 'face_cut',          name: 'フェイスラインカット',     price_label: '¥1,500〜',      block_minutes: 30,  category: 'cut',       description: '会員¥1,500 / 新規¥2,500',     price_type: 'normal' },
-  { id: 'bang_cut',          name: '前髪カット',               price_label: '¥700',          block_minutes: 30,  category: 'cut',       description: '前髪のみのカット',             price_type: 'normal' },
+  { id: 'cut',               name: 'カット',                   price_label: '¥4,500',        block_minutes: 90,  display_minutes: 60,  category: 'cut',       description: 'カット + ブロー仕上げ',        price_type: 'normal' },
+  { id: 'school_cut',        name: 'スクールカット',           price_label: '¥4,000',        block_minutes: 90,  display_minutes: 60,  category: 'cut',       description: '高校生以下対象',               price_type: 'normal' },
+  { id: 'face_cut',          name: 'フェイスラインカット',     price_label: '¥1,500〜',      block_minutes: 60,  display_minutes: 30,  category: 'cut',       description: '会員¥1,500 / 新規¥2,500',     price_type: 'normal' },
+  { id: 'bang_cut',          name: '前髪カット',               price_label: '¥700',          block_minutes: 30,  display_minutes: 15,  category: 'cut',       description: '前髪のみのカット',             price_type: 'normal' },
   // カラー
-  { id: 'full_color',        name: 'フルカラー',               price_label: '¥6,300',        block_minutes: 120, category: 'color',     description: 'フルカラー・リタッチ',         price_type: 'normal' },
-  { id: 'highlight',         name: 'テクニカルカラー',         price_label: '¥3,800〜6,800', block_minutes: 120, category: 'color',     description: 'ハイライト・バレイヤージュなど', price_type: 'normal' },
-  { id: 'henna',             name: 'ヘナ（植物性カラー）',     price_label: '¥7,300〜',      block_minutes: 150, category: 'color',     description: '低刺激の植物性カラー',         price_type: 'normal' },
-  { id: 'manicure',          name: 'ヘアマニキュア',           price_label: '¥7,300〜',      block_minutes: 120, category: 'color',     description: '艶出し・色味調整',             price_type: 'normal' },
-  { id: 'bleach',            name: 'ブリーチ',                 price_label: '¥9,000',        block_minutes: 120, category: 'color',     description: '脱色・ハイトーンカラー',       price_type: 'normal' },
-  { id: 'double_bleach',     name: 'ダブルブリーチ',           price_label: '¥18,000',       block_minutes: 210, category: 'color',     description: '2回ブリーチ・ハイダメージ対応', price_type: 'normal' },
+  { id: 'full_color',        name: 'フルカラー',               price_label: '¥6,300',        block_minutes: 120, display_minutes: 90,  category: 'color',     description: 'フルカラー・リタッチ',         price_type: 'normal' },
+  { id: 'highlight',         name: 'テクニカルカラー',         price_label: '¥3,800〜6,800', block_minutes: 120, display_minutes: 90,  category: 'color',     description: 'ハイライト・バレイヤージュなど', price_type: 'normal' },
+  { id: 'henna',             name: 'ヘナ（植物性カラー）',     price_label: '¥7,300〜',      block_minutes: 120, display_minutes: 90,  category: 'color',     description: '低刺激の植物性カラー',         price_type: 'normal' },
+  { id: 'manicure',          name: 'ヘアマニキュア',           price_label: '¥7,300〜',      block_minutes: 120, display_minutes: 90,  category: 'color',     description: '艶出し・色味調整',             price_type: 'normal' },
+  { id: 'bleach',            name: 'ブリーチ',                 price_label: '¥9,000',        block_minutes: 180, display_minutes: 120, category: 'color',     description: '脱色・ハイトーンカラー',       price_type: 'normal' },
+  { id: 'double_bleach',     name: 'ダブルブリーチ',           price_label: '¥18,000',       block_minutes: 300, display_minutes: 210, category: 'color',     description: '2回ブリーチ・ハイダメージ対応', price_type: 'normal' },
   // パーマ
-  { id: 'perm',              name: 'スタンダードパーマ',       price_label: '¥7,300〜',      block_minutes: 150, category: 'perm',      description: 'コールドパーマ',               price_type: 'normal' },
-  { id: 'digital_perm',      name: 'デジタルパーマ',           price_label: '¥9,500〜',      block_minutes: 210, category: 'perm',      description: '持続力の高いデジタルパーマ',   price_type: 'normal' },
-  { id: 'special_perm',      name: '特殊パーマ',               price_label: '¥24,000〜',     block_minutes: 360, category: 'perm',      description: 'ツイスト・針金等の特殊パーマ', price_type: 'normal' },
+  { id: 'perm',              name: 'スタンダードパーマ',       price_label: '¥7,300〜',      block_minutes: 120, display_minutes: 90,  category: 'perm',      description: 'コールドパーマ',               price_type: 'normal' },
+  { id: 'digital_perm',      name: 'デジタルパーマ',           price_label: '¥9,500〜',      block_minutes: 210, display_minutes: 150, category: 'perm',      description: '持続力の高いデジタルパーマ',   price_type: 'normal' },
+  { id: 'special_perm',      name: '特殊パーマ',               price_label: '¥24,000〜',     block_minutes: 360, display_minutes: 360, category: 'perm',      description: 'ツイスト・針金等の特殊パーマ', price_type: 'normal' },
   // 縮毛矯正
-  { id: 'straight',          name: '縮毛矯正',                 price_label: '¥12,500〜',     block_minutes: 270, category: 'straight',  description: 'シャンプー・ブロー込み',       price_type: 'normal' },
-  { id: 'kamishitsu',        name: '髪質改善トリートメント',   price_label: '¥15,800',       block_minutes: 210, category: 'straight',  description: '髪質改善・ダメージレス',       price_type: 'normal' },
+  { id: 'straight',          name: '縮毛矯正',                 price_label: '¥12,500〜',     block_minutes: 270, display_minutes: 150, category: 'straight',  description: 'シャンプー・ブロー込み',       price_type: 'normal' },
+  { id: 'kamishitsu',        name: '髪質改善トリートメント',   price_label: '¥15,800',       block_minutes: 210, display_minutes: 120, category: 'straight',  description: '髪質改善・ダメージレス',       price_type: 'normal' },
   // トリートメント
-  { id: 'treatment_l',       name: 'トリートメント (ライト)',   price_label: '¥4,500',        block_minutes: 60,  category: 'treatment', description: '3stepヘアケア',                price_type: 'normal' },
-  { id: 'treatment_premium', name: 'プレミアムトリートメント', price_label: '¥7,000',        block_minutes: 90,  category: 'treatment', description: '7段階補修・高濃度トリートメント', price_type: 'normal' },
+  { id: 'treatment_l',       name: 'トリートメント (ライト)',   price_label: '¥4,500',        block_minutes: 60,  display_minutes: 30,  category: 'treatment', description: '3stepヘアケア',                price_type: 'normal' },
+  { id: 'treatment_premium', name: 'プレミアムトリートメント', price_label: '¥7,000',        block_minutes: 90,  display_minutes: 30,  category: 'treatment', description: '7段階補修・高濃度トリートメント', price_type: 'normal' },
   // ヘッドスパ
-  { id: 'head_spa_20',       name: 'ヘッドスパ（20分）',       price_label: '¥5,000',        block_minutes: 60,  category: 'spa',       description: '頭皮ケア・リラクゼーション',   price_type: 'normal' },
-  { id: 'head_spa_30',       name: 'ヘッドスパ（30分）',       price_label: '¥6,000',        block_minutes: 60,  category: 'spa',       description: '30分たっぷりのヘッドスパ',     price_type: 'normal' },
-  { id: 'head_spa_60',       name: 'ヘッドスパ（60分）',       price_label: '¥9,000',        block_minutes: 90,  category: 'spa',       description: '60分のフルコースヘッドスパ',   price_type: 'normal' },
+  { id: 'head_spa_20',       name: 'ヘッドスパ（20分）',       price_label: '¥5,000',        block_minutes: 30,  display_minutes: 20,  category: 'spa',       description: '頭皮ケア・リラクゼーション',   price_type: 'normal' },
+  { id: 'head_spa_30',       name: 'ヘッドスパ（30分）',       price_label: '¥6,000',        block_minutes: 45,  display_minutes: 30,  category: 'spa',       description: '30分たっぷりのヘッドスパ',     price_type: 'normal' },
+  { id: 'head_spa_60',       name: 'ヘッドスパ（60分）',       price_label: '¥9,000',        block_minutes: 75,  display_minutes: 60,  category: 'spa',       description: '60分のフルコースヘッドスパ',   price_type: 'normal' },
   // トリートメントコース
-  { id: 'cut_tr',            name: 'カット＋トリートメント (ライト)',                price_label: '¥5,500',  block_minutes: 120, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
-  { id: 'color_tr',          name: 'カラー＋トリートメント',                        price_label: '¥7,500',  block_minutes: 150, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
-  { id: 'henna_mani_tr',     name: 'ヘナorマニキュア＋トリートメント',              price_label: '¥8,500',  block_minutes: 150, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
-  { id: 'cut_mani_henna',    name: 'カット＋ヘアマニキュアorヘナカラー',            price_label: '¥8,500',  block_minutes: 150, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
-  { id: 'cut_color_tr',      name: 'カット＋カラー＋トリートメント (ライト)',        price_label: '¥11,500', block_minutes: 210, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
-  { id: 'cut_perm_tr',       name: 'カット＋パーマ＋トリートメント (ライト)',        price_label: '¥12,500', block_minutes: 240, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
-  { id: 'cut_dperm_tr',      name: 'カット＋デジタルパーマ＋トリートメント (ライト)', price_label: '¥14,800', block_minutes: 300, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
-  { id: 'cut_str_tr',        name: 'カット＋縮毛矯正＋トリートメント (ライト)',      price_label: '¥17,800', block_minutes: 330, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
-  { id: 'tr_premium_up',     name: '＋プレミアムアップグレード',                    price_label: '¥2,500',  block_minutes: 30,  category: 'set', description: 'トリートメントをプレミアムにアップグレード', price_type: 'normal' },
+  { id: 'cut_tr',            name: 'カット＋トリートメント (ライト)',                price_label: '¥5,500',  block_minutes: 120, display_minutes: 90,  category: 'set', description: 'トリートメントコース', price_type: 'normal' },
+  { id: 'color_tr',          name: 'カラー＋トリートメント',                        price_label: '¥7,500',  block_minutes: 150, display_minutes: 120, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
+  { id: 'henna_mani_tr',     name: 'ヘナorマニキュア＋トリートメント',              price_label: '¥8,500',  block_minutes: 150, display_minutes: 120, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
+  { id: 'cut_mani_henna',    name: 'カット＋ヘアマニキュアorヘナカラー',            price_label: '¥8,500',  block_minutes: 150, display_minutes: 120, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
+  { id: 'cut_color_tr',      name: 'カット＋カラー＋トリートメント (ライト)',        price_label: '¥11,500', block_minutes: 210, display_minutes: 180, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
+  { id: 'cut_perm_tr',       name: 'カット＋パーマ＋トリートメント (ライト)',        price_label: '¥12,500', block_minutes: 240, display_minutes: 180, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
+  { id: 'cut_dperm_tr',      name: 'カット＋デジタルパーマ＋トリートメント (ライト)', price_label: '¥14,800', block_minutes: 300, display_minutes: 240, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
+  { id: 'cut_str_tr',        name: 'カット＋縮毛矯正＋トリートメント (ライト)',      price_label: '¥17,800', block_minutes: 330, display_minutes: 270, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
+  { id: 'tr_premium_up',     name: '＋プレミアムアップグレード',                    price_label: '¥2,500',  block_minutes: 30,  display_minutes: 30,  category: 'set', description: 'トリートメントをプレミアムにアップグレード', price_type: 'normal' },
   // ヘッドスパコース
-  { id: 'cut_spa',           name: 'カット＋ヘッドスパ (20分)',                     price_label: '¥8,500',  block_minutes: 120, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
-  { id: 'color_spa',         name: 'カラー＋ヘッドスパ',                            price_label: '¥8,500',  block_minutes: 150, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
-  { id: 'henna_mani_spa',    name: 'ヘナorマニキュア＋ヘッドスパ',                  price_label: '¥9,500',  block_minutes: 150, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
-  { id: 'cut_color_spa',     name: 'カット＋カラー＋ヘッドスパ (20分)',              price_label: '¥12,500', block_minutes: 210, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
-  { id: 'cut_perm_spa',      name: 'カット＋パーマ＋ヘッドスパ (20分)',              price_label: '¥13,500', block_minutes: 240, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
-  { id: 'cut_dperm_spa',     name: 'カット＋デジタルパーマ＋ヘッドスパ (20分)',      price_label: '¥15,800', block_minutes: 270, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
-  { id: 'cut_str_spa',       name: 'カット＋縮毛矯正＋ヘッドスパ (20分)',            price_label: '¥18,800', block_minutes: 330, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
-  { id: 'spa_up_30',         name: '＋ヘッドスパアップグレード (30分)',               price_label: '¥1,000',  block_minutes: 30,  category: 'set', description: 'ヘッドスパを30分にアップグレード', price_type: 'normal' },
-  { id: 'spa_premium_60',    name: '＋プレミアムアップグレード (60分)',                price_label: '¥5,000',  block_minutes: 70,  category: 'set', description: 'ヘッドスパをプレミアム60分にアップグレード', price_type: 'normal' },
+  { id: 'cut_spa',           name: 'カット＋ヘッドスパ (20分)',                     price_label: '¥8,500',  block_minutes: 120, display_minutes: 90,  category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
+  { id: 'color_spa',         name: 'カラー＋ヘッドスパ',                            price_label: '¥8,500',  block_minutes: 150, display_minutes: 120, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
+  { id: 'henna_mani_spa',    name: 'ヘナorマニキュア＋ヘッドスパ',                  price_label: '¥9,500',  block_minutes: 150, display_minutes: 120, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
+  { id: 'cut_color_spa',     name: 'カット＋カラー＋ヘッドスパ (20分)',              price_label: '¥12,500', block_minutes: 210, display_minutes: 180, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
+  { id: 'cut_perm_spa',      name: 'カット＋パーマ＋ヘッドスパ (20分)',              price_label: '¥13,500', block_minutes: 240, display_minutes: 180, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
+  { id: 'cut_dperm_spa',     name: 'カット＋デジタルパーマ＋ヘッドスパ (20分)',      price_label: '¥15,800', block_minutes: 270, display_minutes: 210, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
+  { id: 'cut_str_spa',       name: 'カット＋縮毛矯正＋ヘッドスパ (20分)',            price_label: '¥18,800', block_minutes: 330, display_minutes: 270, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
+  { id: 'spa_up_30',         name: '＋ヘッドスパアップグレード (30分)',               price_label: '¥1,000',  block_minutes: 30,  display_minutes: 30,  category: 'set', description: 'ヘッドスパを30分にアップグレード', price_type: 'normal' },
+  { id: 'spa_premium_60',    name: '＋プレミアムアップグレード (60分)',                price_label: '¥5,000',  block_minutes: 70,  display_minutes: 60,  category: 'set', description: 'ヘッドスパをプレミアム60分にアップグレード', price_type: 'normal' },
 ]
 
 const CATEGORIES: { key: MenuCategory; label: string }[] = [
@@ -153,6 +154,7 @@ export default function Reservation() {
   const [error, setError] = useState<string | null>(null)
 
   const totalBlock = selectedMenus.reduce((s, m) => s + m.block_minutes, 0)
+  const totalDisplay = selectedMenus.reduce((s, m) => s + m.display_minutes, 0)
   const weekDates = Array.from({ length: 7 }, (_, i) => toDateStr(addDays(weekStart, i)))
   const todayStr = toDateStr(new Date())
 
@@ -414,7 +416,7 @@ export default function Reservation() {
                           <div>
                             <p className="text-sm text-shore font-medium">{m.name}</p>
                             <p className="text-[11px] text-sand-400 mt-0.5">{m.description}</p>
-                            <p className="text-[10px] text-sand-300 mt-1">所要時間目安：約{m.block_minutes}分</p>
+                            <p className="text-[10px] text-sand-300 mt-1">所要時間目安：約{m.display_minutes}分</p>
                           </div>
                           <p className="flex-none font-serif text-sm text-shore whitespace-nowrap">{m.price_label}</p>
                         </div>
@@ -437,7 +439,7 @@ export default function Reservation() {
               <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-sand-200 px-4 py-3 flex items-center gap-4 z-30 shadow-lg">
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] text-sand-400 truncate">{selectedMenus.map(m => m.name).join('・')}</p>
-                  <p className="text-[10px] text-sand-300">合計約{totalBlock}分</p>
+                  <p className="text-[10px] text-sand-300">合計約{totalDisplay}分</p>
                 </div>
                 <button onClick={() => setStep('datetime')}
                   className="flex-none px-8 py-3 bg-shore text-cream text-[11px] tracking-[0.2em] hover:bg-shore/80 transition-colors">
@@ -466,7 +468,7 @@ export default function Reservation() {
                   </span>
                 ))}
               </div>
-              <p className="text-[10px] text-sand-400 mt-2">合計所要時間 約{totalBlock}分</p>
+              <p className="text-[10px] text-sand-400 mt-2">合計所要時間 約{totalDisplay}分</p>
             </div>
 
             {/* Stylist */}
@@ -592,7 +594,7 @@ export default function Reservation() {
             <div className="bg-sand-50 border border-sand-100 p-4 mb-8 space-y-1.5">
               <p className="text-sm text-shore font-medium">{selectedMenus.map(m => m.name).join('・')}</p>
               <p className="text-[12px] text-sand-400">
-                {selectedDate && formatDate(selectedDate)}　{selectedTime}〜　約{totalBlock}分
+                {selectedDate && formatDate(selectedDate)}　{selectedTime}〜　約{totalDisplay}分
               </p>
               <p className="text-[11px] text-sand-400">
                 スタイリスト：{selectedStylist === 'fujino' ? '藤野 翔' : '指名なし'}
@@ -671,7 +673,7 @@ export default function Reservation() {
               </div>
               <div className="bg-white px-5 py-5 divide-y divide-sand-100">
                 {[
-                  { label: '来店日時',     value: `${selectedDate && formatDate(selectedDate)}　${selectedTime}〜（約${totalBlock}分）` },
+                  { label: '来店日時',     value: `${selectedDate && formatDate(selectedDate)}　${selectedTime}〜（約${totalDisplay}分）` },
                   { label: 'メニュー',     value: selectedMenus.map(m => m.name).join('・') },
                   { label: 'スタイリスト', value: selectedStylist === 'fujino' ? '藤野 翔' : '指名なし' },
                   { label: 'ご予約者',     value: `${name} 様` },
