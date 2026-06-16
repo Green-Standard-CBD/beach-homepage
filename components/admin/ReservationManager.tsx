@@ -630,6 +630,134 @@ function GridLines({ slotW }: { slotW: number }) {
   )
 }
 
+// ─── 残り受付可能数 行 ──────────────────────────────────────────
+function CapacityRows({ slotW, date, allReservations }: {
+  slotW: number
+  date: string
+  allReservations: Reservation[]
+}) {
+  const hours = Array.from({ length: HOURS }, (_, i) => DAY_START / 60 + i)
+  const [expanded, setExpanded] = useState(false)
+  const [saved, setSaved] = useState<Record<number, number>>({})
+  const [editing, setEditing] = useState<Record<number, number>>({})
+  const [showConfirm, setShowConfirm] = useState(false)
+
+  useEffect(() => {
+    fetch(`/api/admin/slot-capacity?date=${date}`)
+      .then(r => r.json())
+      .then(data => { setSaved(data); setEditing(data) })
+      .catch(() => {})
+  }, [date])
+
+  function countAtHour(h: number) {
+    const startMin = h * 60
+    const endMin = startMin + 60
+    return allReservations.filter(r => {
+      const rs = timeToMin(r.time)
+      return rs < endMin && rs + r.block_minutes > startMin
+    }).length
+  }
+
+  function handleChange(h: number, delta: number) {
+    setEditing(prev => ({ ...prev, [h]: Math.max(0, (prev[h] ?? 0) + delta) }))
+  }
+
+  async function handleSave() {
+    await fetch('/api/admin/slot-capacity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, capacities: editing }),
+    })
+    setSaved({ ...editing })
+    setShowConfirm(false)
+    setExpanded(false)
+  }
+
+  return (
+    <>
+      {/* 予約数 row */}
+      <div className="flex border-b border-sand-200 bg-sand-50/60">
+        <div style={{ width: LABEL_W, minWidth: LABEL_W }}
+          className="sticky left-0 z-10 bg-sand-50 border-r-2 border-sand-300 flex-shrink-0 flex items-center justify-center py-1">
+          <span className="text-[10px] text-sand-400 tracking-wide">予約数</span>
+        </div>
+        {hours.map(h => (
+          <div key={h} style={{ width: slotW, minWidth: slotW }}
+            className="flex items-center justify-center border-r border-sand-200 py-1">
+            <span className="text-[11px] text-sand-500">{countAtHour(h)}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* 残り受付可能数 row — 折りたたみ状態 */}
+      {!expanded && (
+        <div className="flex border-b-2 border-sand-200 bg-sand-50/60">
+          <div style={{ width: LABEL_W, minWidth: LABEL_W }}
+            className="sticky left-0 z-10 bg-sand-50 border-r-2 border-sand-300 flex-shrink-0 flex items-center justify-between px-1.5 py-1">
+            <span className="text-[9px] text-sand-400 tracking-wide leading-tight">残り受付<br/>可能数</span>
+            <button onClick={() => setExpanded(true)}
+              className="text-sand-400 hover:text-shore text-[10px] ml-1">▼</button>
+          </div>
+          {hours.map(h => {
+            const val = saved[h] ?? 0
+            return (
+              <div key={h} style={{ width: slotW, minWidth: slotW }}
+                className="flex items-center justify-center border-r border-sand-200 py-1">
+                <span className={`text-[11px] font-medium ${val === 0 ? 'text-red-500' : 'text-shore'}`}>{val}</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* 残り受付可能数 row — +/- 編集状態 */}
+      {expanded && (
+        <div className="flex border-b-2 border-shore/30 bg-sand-50/60">
+          <div style={{ width: LABEL_W, minWidth: LABEL_W }}
+            className="sticky left-0 z-10 bg-sand-50 border-r-2 border-sand-300 flex-shrink-0 flex flex-col items-center justify-center gap-1.5 py-1.5">
+            <button onClick={() => { setEditing({ ...saved }); setExpanded(false) }}
+              className="text-[10px] px-3 py-0.5 border border-sand-300 rounded bg-white hover:bg-sand-50 text-sand-500 w-14">
+              戻す
+            </button>
+            <button onClick={() => setShowConfirm(true)}
+              className="text-[10px] px-3 py-0.5 border border-shore rounded bg-shore text-white hover:bg-shore/80 w-14">
+              設定
+            </button>
+          </div>
+          {hours.map(h => {
+            const val = editing[h] ?? 0
+            return (
+              <div key={h} style={{ width: slotW, minWidth: slotW }}
+                className="flex flex-col items-center border-r border-sand-200 py-0.5 gap-px">
+                <button onClick={() => handleChange(h, 1)}
+                  className="w-full text-[11px] bg-shore/70 hover:bg-shore text-white leading-none py-0.5 font-bold">＋</button>
+                <span className={`text-[12px] font-bold py-0.5 ${val === 0 ? 'text-red-500' : 'text-shore'}`}>{val}</span>
+                <button onClick={() => handleChange(h, -1)}
+                  className="w-full text-[11px] bg-shore/70 hover:bg-shore text-white leading-none py-0.5 font-bold">−</button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* 確認ダイアログ */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-80">
+            <p className="text-sm text-shore mb-6">残り受付可能数を設定します。よろしいですか？</p>
+            <div className="flex justify-end gap-4">
+              <button onClick={() => setShowConfirm(false)}
+                className="text-sm text-sand-400 px-4 py-2 hover:text-shore">キャンセル</button>
+              <button onClick={handleSave}
+                className="text-sm text-shore font-medium px-4 py-2 hover:underline">OK</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 // ─── レーン割り当て（重複予約を縦に積み上げる） ──────────────────
 function assignLanes(rList: Reservation[], overrides: Record<string, number>): Map<string, number> {
   const sorted = [...rList].sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))
@@ -1055,6 +1183,11 @@ function ScheduleView({
     <div className="h-full overflow-auto">
       <div style={{ minWidth: LABEL_W + totalW }}>
         <TimeHeader slotW={slotW} />
+        <CapacityRows
+          slotW={slotW}
+          date={date}
+          allReservations={stylists.filter(s => s.active).flatMap(s => getResForStylist(s))}
+        />
 
         {stylists
           .filter(s => s.active)
