@@ -5,7 +5,12 @@ import Footer from '@/components/Footer'
 import ShopContent from '@/components/ShopContent'
 
 export const metadata: Metadata = {
-  title: 'SHOP | BEACH Hairsalon & cafe',
+  title: 'オンラインショップ',
+  description: 'BEACH Hairsalon & cafeのオンラインショップ。N.（エヌドット）・APUSEL・NOTEなどプロ仕様のヘアケア商品を取り扱い。スタイリング・シャンプー・トリートメントを全国配送。',
+  openGraph: {
+    title: 'オンラインショップ | BEACH Hairsalon & cafe',
+    description: 'N.（エヌドット）・APUSEL・NOTEなどプロ仕様のヘアケア商品。スタイリング・シャンプー・トリートメントを全国配送。',
+  },
 }
 
 export type Variant = {

@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout
+Disallow: /cart
+Disallow: /order-complete
+Disallow: /register
+Disallow: /logout
+Disallow: /mypage
+
+Sitemap: https://beach-hair.vercel.app/sitemap.xml
