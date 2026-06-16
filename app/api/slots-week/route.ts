@@ -87,12 +87,19 @@ export async function GET(req: NextRequest) {
       if (date < todayStr)                          { availability[date][time] = false; continue }
       if (date === todayStr && startMin <= nowMin)  { availability[date][time] = false; continue }
       if (startMin + block > MAX_END_MIN)           { availability[date][time] = false; continue }
-      // 残り受付可能数が設定されている時間帯はその値を優先
-      const hour = Math.floor(startMin / 60)
-      if (slotCap[date]?.[hour] !== undefined) {
-        availability[date][time] = slotCap[date][hour] > 0
-        continue
+      // 予約がまたがる全時間帯をチェック（例：12:30〜14:00は時間12と13の両方）
+      const startHour = Math.floor(startMin / 60)
+      const endHour = Math.floor((startMin + block - 1) / 60)
+      const spannedHours = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i)
+      // いずれかの時間帯が残り0なら不可
+      if (spannedHours.some(h => slotCap[date]?.[h] === 0)) {
+        availability[date][time] = false; continue
       }
+      // 全時間帯が残り>0なら受付可（手動上書き）
+      if (spannedHours.every(h => (slotCap[date]?.[h] ?? -1) > 0)) {
+        availability[date][time] = true; continue
+      }
+      // それ以外は従来の競合チェック
       const conflict = (occupied[date] ?? []).some(o => overlaps(startMin, block, o.start, o.block))
       availability[date][time] = !conflict
     }
