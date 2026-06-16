@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
     return toDateStr(d)
   })
 
-  const [{ data: reservations }, { data: blocked }] = await Promise.all([
+  const [{ data: reservations }, { data: blocked }, { data: capacityRows }] = await Promise.all([
     admin.from('reservations')
       .select('date, time, block_minutes')
       .gte('date', dates[0])
@@ -48,6 +48,10 @@ export async function GET(req: NextRequest) {
       .neq('status', 'cancelled'),
     admin.from('blocked_slots')
       .select('date, time, block_minutes')
+      .gte('date', dates[0])
+      .lte('date', dates[6]),
+    admin.from('slot_capacity')
+      .select('date, hour, capacity')
       .gte('date', dates[0])
       .lte('date', dates[6]),
   ])
@@ -60,6 +64,13 @@ export async function GET(req: NextRequest) {
   }
   for (const b of blocked ?? []) {
     occupied[b.date]?.push({ start: timeToMin(b.time), block: b.block_minutes })
+  }
+
+  // 残り受付可能数（管理者設定） date → hour → capacity
+  const slotCap: Record<string, Record<number, number>> = {}
+  for (const row of capacityRows ?? []) {
+    if (!slotCap[row.date]) slotCap[row.date] = {}
+    slotCap[row.date][row.hour] = row.capacity
   }
 
   const now = new Date()
@@ -76,6 +87,12 @@ export async function GET(req: NextRequest) {
       if (date < todayStr)                          { availability[date][time] = false; continue }
       if (date === todayStr && startMin <= nowMin)  { availability[date][time] = false; continue }
       if (startMin + block > MAX_END_MIN)           { availability[date][time] = false; continue }
+      // 残り受付可能数が設定されている時間帯はその値を優先
+      const hour = Math.floor(startMin / 60)
+      if (slotCap[date]?.[hour] !== undefined) {
+        availability[date][time] = slotCap[date][hour] > 0
+        continue
+      }
       const conflict = (occupied[date] ?? []).some(o => overlaps(startMin, block, o.start, o.block))
       availability[date][time] = !conflict
     }

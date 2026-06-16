@@ -663,11 +663,12 @@ function CapacityRows({ slotW, date, allReservations }: {
   }
 
   async function handleSave() {
-    await fetch('/api/admin/slot-capacity', {
+    const res = await fetch('/api/admin/slot-capacity', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ date, capacities: editing }),
     })
+    if (!res.ok) { alert('保存に失敗しました'); return }
     setSaved({ ...editing })
     setShowConfirm(false)
     setExpanded(false)
