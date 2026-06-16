@@ -58,7 +58,7 @@ const MENUS: MenuItem[] = [
   { id: 'cut_tr',            name: 'カット＋トリートメント (ライト)',                price_label: '¥5,500',  block_minutes: 120, display_minutes: 90,  category: 'set', description: 'トリートメントコース', price_type: 'normal' },
   { id: 'color_tr',          name: 'カラー＋トリートメント',                        price_label: '¥7,500',  block_minutes: 150, display_minutes: 120, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
   { id: 'henna_mani_tr',     name: 'ヘナorマニキュア＋トリートメント',              price_label: '¥8,500',  block_minutes: 150, display_minutes: 120, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
-  { id: 'cut_mani_henna',    name: 'カット＋ヘアマニキュアorヘナカラー',            price_label: '¥8,500',  block_minutes: 150, display_minutes: 120, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
+  { id: 'cut_mani_henna',    name: 'カット＋ヘアマニキュアorヘナカラー',            price_label: '¥8,500',  block_minutes: 210, display_minutes: 180, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
   { id: 'cut_color_tr',      name: 'カット＋カラー＋トリートメント (ライト)',        price_label: '¥11,500', block_minutes: 210, display_minutes: 180, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
   { id: 'cut_perm_tr',       name: 'カット＋パーマ＋トリートメント (ライト)',        price_label: '¥12,500', block_minutes: 240, display_minutes: 180, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
   { id: 'cut_dperm_tr',      name: 'カット＋デジタルパーマ＋トリートメント (ライト)', price_label: '¥14,800', block_minutes: 300, display_minutes: 240, category: 'set', description: 'トリートメントコース', price_type: 'normal' },
@@ -72,8 +72,8 @@ const MENUS: MenuItem[] = [
   { id: 'cut_perm_spa',      name: 'カット＋パーマ＋ヘッドスパ (20分)',              price_label: '¥13,500', block_minutes: 240, display_minutes: 180, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
   { id: 'cut_dperm_spa',     name: 'カット＋デジタルパーマ＋ヘッドスパ (20分)',      price_label: '¥15,800', block_minutes: 270, display_minutes: 210, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
   { id: 'cut_str_spa',       name: 'カット＋縮毛矯正＋ヘッドスパ (20分)',            price_label: '¥18,800', block_minutes: 330, display_minutes: 270, category: 'set', description: 'ヘッドスパコース', price_type: 'normal' },
-  { id: 'spa_up_30',         name: '＋ヘッドスパアップグレード (30分)',               price_label: '¥1,000',  block_minutes: 30,  display_minutes: 30,  category: 'set', description: 'ヘッドスパを30分にアップグレード', price_type: 'normal' },
-  { id: 'spa_premium_60',    name: '＋プレミアムアップグレード (60分)',                price_label: '¥5,000',  block_minutes: 70,  display_minutes: 60,  category: 'set', description: 'ヘッドスパをプレミアム60分にアップグレード', price_type: 'normal' },
+  { id: 'spa_up_30',         name: '＋ヘッドスパアップグレード (30分)',               price_label: '¥1,000',  block_minutes: 30,  display_minutes: 15,  category: 'set', description: 'ヘッドスパを30分にアップグレード', price_type: 'normal' },
+  { id: 'spa_premium_60',    name: '＋プレミアムアップグレード (60分)',                price_label: '¥5,000',  block_minutes: 30,  display_minutes: 30,  category: 'set', description: 'ヘッドスパをプレミアム60分にアップグレード', price_type: 'normal' },
 ]
 
 const CATEGORIES: { key: MenuCategory; label: string }[] = [
