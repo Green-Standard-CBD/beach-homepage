@@ -493,6 +493,12 @@ function MypageContent() {
                       <p className="font-sans text-sm text-sand-600 leading-snug">{h.menu_name ?? 'メニュー未登録'}</p>
                       <p className="font-sans text-xs text-sand-400 mt-0.5">{h.time} 〜 {endTime(h.time, h.block_minutes)}</p>
                     </div>
+                    {h.status === 'completed' && (
+                      <span className="flex-shrink-0 text-[10px] font-sans bg-sand-50 text-sand-500 border border-sand-200 rounded px-1.5 py-0.5">来店済み</span>
+                    )}
+                    {h.status === 'cancelled' && (
+                      <span className="flex-shrink-0 text-[10px] font-sans bg-red-50 text-red-400 border border-red-200 rounded px-1.5 py-0.5">キャンセル済み</span>
+                    )}
                     {h.source === 'hotpepper' && (
                       <span className="flex-shrink-0 text-[10px] font-sans bg-orange-50 text-orange-400 border border-orange-200 rounded px-1.5 py-0.5">HP</span>
                     )}

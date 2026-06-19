@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   // 予約が本人のものか確認してからキャンセル
   const { data: reservation, error: fetchError } = await admin
     .from('reservations')
-    .select('id, date, time, menu_name, status, member_id')
+    .select('id, date, time, menu_name, status, member_id, source')
     .eq('id', reservation_id)
     .eq('member_id', member.id)
     .single()
@@ -54,6 +54,12 @@ export async function POST(req: NextRequest) {
   }
   if (reservation.status === 'cancelled') {
     return NextResponse.json({ error: 'すでにキャンセル済みです' }, { status: 400 })
+  }
+  if (reservation.source === 'hotpepper') {
+    return NextResponse.json(
+      { error: 'この予約はホットペッパー経由のため、お手数ですがホットペッパー、またはサロンへ直接ご連絡ください' },
+      { status: 403 }
+    )
   }
 
   const { error } = await admin

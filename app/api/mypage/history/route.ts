@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
     .select('id, date, time, block_minutes, menu_name, status, source')
     .eq('member_id', memberId)
     .lt('date', today)
+    .in('status', ['completed', 'cancelled'])
     .order('date', { ascending: false })
     .limit(30)
 
