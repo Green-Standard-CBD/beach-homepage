@@ -10,6 +10,7 @@ const config: Config = {
       colors: {
         cream: '#FDFAF6',
         sand: {
+          50: '#F7F2EA',
           100: '#F0EAE0',
           200: '#E0D4C4',
           300: '#C8B49A',

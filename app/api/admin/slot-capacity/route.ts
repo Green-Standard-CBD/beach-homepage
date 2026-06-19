@@ -13,31 +13,31 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('slot_capacity')
-    .select('hour, capacity')
+    .select('time, capacity')
     .eq('date', date)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const result: Record<number, number> = {}
-  for (const row of data ?? []) result[row.hour] = row.capacity
+  const result: Record<string, number> = {}
+  for (const row of data ?? []) result[row.time] = row.capacity
   return NextResponse.json(result)
 }
 
 // POST /api/admin/slot-capacity
-// body: { date: string, capacities: Record<number, number> }
+// body: { date: string, capacities: Record<string, number> }  // capacities key = "HH:MM"（30分刻み）
 export async function POST(req: NextRequest) {
   const { date, capacities } = await req.json()
   if (!date || !capacities) return NextResponse.json({ error: 'invalid body' }, { status: 400 })
 
-  const rows = Object.entries(capacities).map(([hour, capacity]) => ({
+  const rows = Object.entries(capacities).map(([time, capacity]) => ({
     date,
-    hour: Number(hour),
+    time,
     capacity: Number(capacity),
   }))
 
   const { error } = await supabase
     .from('slot_capacity')
-    .upsert(rows, { onConflict: 'date,hour' })
+    .upsert(rows, { onConflict: 'date,time' })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })

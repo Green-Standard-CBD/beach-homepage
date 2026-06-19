@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
       .gte('date', dates[0])
       .lte('date', dates[6]),
     admin.from('slot_capacity')
-      .select('date, hour, capacity')
+      .select('date, time, capacity')
       .gte('date', dates[0])
       .lte('date', dates[6]),
   ])
@@ -66,11 +66,16 @@ export async function GET(req: NextRequest) {
     occupied[b.date]?.push({ start: timeToMin(b.time), block: b.block_minutes })
   }
 
-  // 残り受付可能数（管理者設定） date → hour → capacity
-  const slotCap: Record<string, Record<number, number>> = {}
+  // 残り受付可能数（管理者設定） date → "HH:MM"（30分刻み） → capacity
+  const slotCap: Record<string, Record<string, number>> = {}
   for (const row of capacityRows ?? []) {
     if (!slotCap[row.date]) slotCap[row.date] = {}
-    slotCap[row.date][row.hour] = row.capacity
+    slotCap[row.date][row.time] = row.capacity
+  }
+
+  function toHalfHour(min: number) {
+    const rounded = Math.floor(min / 30) * 30
+    return `${String(Math.floor(rounded / 60)).padStart(2, '0')}:${String(rounded % 60).padStart(2, '0')}`
   }
 
   const now = new Date()
@@ -87,16 +92,17 @@ export async function GET(req: NextRequest) {
       if (date < todayStr)                          { availability[date][time] = false; continue }
       if (date === todayStr && startMin <= nowMin)  { availability[date][time] = false; continue }
       if (startMin + block > MAX_END_MIN)           { availability[date][time] = false; continue }
-      // 予約がまたがる全時間帯をチェック（例：12:30〜14:00は時間12と13の両方）
-      const startHour = Math.floor(startMin / 60)
-      const endHour = Math.floor((startMin + block - 1) / 60)
-      const spannedHours = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i)
-      // いずれかの時間帯が残り0なら不可
-      if (spannedHours.some(h => slotCap[date]?.[h] === 0)) {
+      // 予約がまたがる全30分枠をチェック（例：12:30〜14:00は12:30/13:00/13:30）
+      const spannedSlots = Array.from(
+        { length: Math.ceil((startMin + block - Math.floor(startMin / 30) * 30) / 30) },
+        (_, i) => toHalfHour(startMin + i * 30)
+      )
+      // いずれかの30分枠が残り0なら不可
+      if (spannedSlots.some(t => slotCap[date]?.[t] === 0)) {
         availability[date][time] = false; continue
       }
-      // 全時間帯が残り>0なら受付可（手動上書き）
-      if (spannedHours.every(h => (slotCap[date]?.[h] ?? -1) > 0)) {
+      // 全30分枠が残り>0なら受付可（手動上書き）
+      if (spannedSlots.every(t => (slotCap[date]?.[t] ?? -1) > 0)) {
         availability[date][time] = true; continue
       }
       // それ以外は従来の競合チェック

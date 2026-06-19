@@ -631,15 +631,21 @@ function GridLines({ slotW }: { slotW: number }) {
 }
 
 // ─── 残り受付可能数 行 ──────────────────────────────────────────
-function CapacityRows({ slotW, date, allReservations }: {
+function CapacityRows({ slotW, date, allReservations, blockedSlots }: {
   slotW: number
   date: string
   allReservations: Reservation[]
+  blockedSlots: BlockedSlot[]
 }) {
-  const hours = Array.from({ length: HOURS }, (_, i) => DAY_START / 60 + i)
+  // 30分刻みの時刻キー（"HH:MM"）。受付可能枠はホットペッパーと同じく30分単位で設定する
+  const halfSlots = Array.from({ length: HOURS * 2 }, (_, i) => {
+    const m = DAY_START + i * 30
+    return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+  })
+  const halfSlotW = slotW / 2
   const [expanded, setExpanded] = useState(false)
-  const [saved, setSaved] = useState<Record<number, number>>({})
-  const [editing, setEditing] = useState<Record<number, number>>({})
+  const [saved, setSaved] = useState<Record<string, number>>({})
+  const [editing, setEditing] = useState<Record<string, number>>({})
   const [showConfirm, setShowConfirm] = useState(false)
 
   useEffect(() => {
@@ -649,17 +655,35 @@ function CapacityRows({ slotW, date, allReservations }: {
       .catch(() => {})
   }, [date])
 
-  function countAtHour(h: number) {
-    const startMin = h * 60
-    const endMin = startMin + 60
+  function countAtSlot(t: string) {
+    const startMin = timeToMin(t)
+    const endMin = startMin + 30
     return allReservations.filter(r => {
       const rs = timeToMin(r.time)
       return rs < endMin && rs + r.block_minutes > startMin
     }).length
   }
 
-  function handleChange(h: number, delta: number) {
-    setEditing(prev => ({ ...prev, [h]: Math.max(0, (prev[h] ?? 0) + delta) }))
+  // 予約・終日ブロック問わず「枠が埋まっているか」（藤野翔とフリーは同一枠なので合算）
+  function isOccupiedAtSlot(t: string) {
+    if (countAtSlot(t) > 0) return true
+    const startMin = timeToMin(t)
+    const endMin = startMin + 30
+    return blockedSlots.some(bs => {
+      const bs_ = timeToMin(bs.time)
+      return bs_ < endMin && bs_ + bs.block_minutes > startMin
+    })
+  }
+
+  function defaultCapacity(t: string) {
+    return isOccupiedAtSlot(t) ? 0 : 1
+  }
+
+  function handleChange(t: string, delta: number) {
+    setEditing(prev => {
+      const base = prev[t] !== undefined ? prev[t] : defaultCapacity(t)
+      return { ...prev, [t]: Math.max(0, base + delta) }
+    })
   }
 
   async function handleSave() {
@@ -682,10 +706,10 @@ function CapacityRows({ slotW, date, allReservations }: {
           className="sticky left-0 z-10 bg-sand-50 border-r-2 border-sand-300 flex-shrink-0 flex items-center justify-center py-1">
           <span className="text-[10px] text-sand-400 tracking-wide">予約数</span>
         </div>
-        {hours.map(h => (
-          <div key={h} style={{ width: slotW, minWidth: slotW }}
-            className="flex items-center justify-center border-r border-sand-200 py-1">
-            <span className="text-[11px] text-sand-500">{countAtHour(h)}</span>
+        {halfSlots.map((t, i) => (
+          <div key={t} style={{ width: halfSlotW, minWidth: halfSlotW }}
+            className={`flex items-center justify-center border-r py-1 ${i % 2 === 0 ? 'border-dashed border-sand-200' : 'border-solid border-sand-200'}`}>
+            <span className="text-[11px] text-sand-500">{countAtSlot(t)}</span>
           </div>
         ))}
       </div>
@@ -699,11 +723,11 @@ function CapacityRows({ slotW, date, allReservations }: {
             <button onClick={() => setExpanded(true)}
               className="text-sand-400 hover:text-shore text-[10px] ml-1">▼</button>
           </div>
-          {hours.map(h => {
-            const val = saved[h] ?? 0
+          {halfSlots.map((t, i) => {
+            const val = saved[t] !== undefined ? saved[t] : defaultCapacity(t)
             return (
-              <div key={h} style={{ width: slotW, minWidth: slotW }}
-                className="flex items-center justify-center border-r border-sand-200 py-1">
+              <div key={t} style={{ width: halfSlotW, minWidth: halfSlotW }}
+                className={`flex items-center justify-center border-r py-1 ${i % 2 === 0 ? 'border-dashed border-sand-200' : 'border-solid border-sand-200'}`}>
                 <span className={`text-[11px] font-medium ${val === 0 ? 'text-red-500' : 'text-shore'}`}>{val}</span>
               </div>
             )
@@ -725,15 +749,15 @@ function CapacityRows({ slotW, date, allReservations }: {
               設定
             </button>
           </div>
-          {hours.map(h => {
-            const val = editing[h] ?? 0
+          {halfSlots.map((t, i) => {
+            const val = editing[t] !== undefined ? editing[t] : defaultCapacity(t)
             return (
-              <div key={h} style={{ width: slotW, minWidth: slotW }}
-                className="flex flex-col items-center border-r border-sand-200 py-0.5 gap-px">
-                <button onClick={() => handleChange(h, 1)}
+              <div key={t} style={{ width: halfSlotW, minWidth: halfSlotW }}
+                className={`flex flex-col items-center border-r py-0.5 gap-px ${i % 2 === 0 ? 'border-dashed border-sand-200' : 'border-solid border-sand-200'}`}>
+                <button onClick={() => handleChange(t, 1)}
                   className="w-full text-[11px] bg-shore/70 hover:bg-shore text-white leading-none py-0.5 font-bold">＋</button>
                 <span className={`text-[12px] font-bold py-0.5 ${val === 0 ? 'text-red-500' : 'text-shore'}`}>{val}</span>
-                <button onClick={() => handleChange(h, -1)}
+                <button onClick={() => handleChange(t, -1)}
                   className="w-full text-[11px] bg-shore/70 hover:bg-shore text-white leading-none py-0.5 font-bold">−</button>
               </div>
             )
@@ -1188,6 +1212,7 @@ function ScheduleView({
           slotW={slotW}
           date={date}
           allReservations={stylists.filter(s => s.active).flatMap(s => getResForStylist(s))}
+          blockedSlots={blockedSlots}
         />
 
         {stylists
