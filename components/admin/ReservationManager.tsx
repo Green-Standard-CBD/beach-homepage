@@ -246,14 +246,23 @@ export default function ReservationManager() {
 
   async function updateStatus(id: string, status: Status) {
     setUpdating(true)
-    await fetch('/api/admin/reservations', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status }),
-    })
-    setRes(prev => prev.map(r => r.id === id ? { ...r, status } : r))
-    if (selected?.id === id) setSelected(prev => prev ? { ...prev, status } : null)
-    setUpdating(false)
+    try {
+      const res = await fetch('/api/admin/reservations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error ?? '更新に失敗しました')
+      }
+      setRes(prev => prev.map(r => r.id === id ? { ...r, status } : r))
+      if (selected?.id === id) setSelected(prev => prev ? { ...prev, status } : null)
+    } catch (e) {
+      alert(`更新に失敗しました\n${(e as Error).message ?? ''}`)
+    } finally {
+      setUpdating(false)
+    }
   }
 
   async function moveReservation(id: string, time: string, stylistId: string | null) {
