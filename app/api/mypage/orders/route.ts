@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getMemberIdFromRequest } from '@/lib/memberCookie'
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-function getMemberId(req: NextRequest): string | null {
-  const raw = req.cookies.get('hp_member')?.value
-  if (!raw) return null
-  try { return JSON.parse(raw).id ?? null } catch { return null }
-}
-
 export async function GET(req: NextRequest) {
-  const memberId = getMemberId(req)
+  const memberId = getMemberIdFromRequest(req)
   if (!memberId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   const { data, error } = await admin

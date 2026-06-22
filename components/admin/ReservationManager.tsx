@@ -193,7 +193,7 @@ export default function ReservationManager() {
     const all: Reservation[] = json.reservations ?? []
     const readIds = getReadIds()
     setAllUnread(all.filter(r => !readIds.has(r.id)))
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, []) // getReadIdsはlocalStorage読み取りのみで依存に含める必要はない
 
   // 予約一覧用：全件（全ステータス含む）
   const fetchAllReservations = useCallback(async () => {
@@ -809,20 +809,6 @@ function assignLanes(rList: Reservation[], overrides: Record<string, number>): M
 }
 
 // ─── スケジュールビュー ────────────────────────────────────────
-function assignBsLanes(bsList: BlockedSlot[], overrides: Record<string, number>): Map<string, number> {
-  const laneEnds: number[] = []
-  const map = new Map<string, number>()
-  for (const bs of bsList) {
-    const start = timeToMin(bs.time)
-    const end = start + (overrides[bs.id] ?? bs.block_minutes)
-    let lane = laneEnds.findIndex(e => e <= start)
-    if (lane === -1) lane = laneEnds.length
-    laneEnds[lane] = end
-    map.set(bs.id, lane)
-  }
-  return map
-}
-
 type LaneEntry = { id: string; start: number; end: number }
 function assignLanesGeneric(items: LaneEntry[]): Map<string, number> {
   const sorted = [...items].sort((a, b) => a.start - b.start)

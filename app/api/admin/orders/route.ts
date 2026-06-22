@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { escapeHtml } from '@/lib/html'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+function isAuthed(req: NextRequest) {
+  const token = req.cookies.get('admin_auth')?.value
+  return token && token === process.env.ADMIN_TOKEN
+}
+
 export async function GET(req: NextRequest) {
+  if (!isAuthed(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status') ?? 'paid'
 
@@ -27,6 +35,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  if (!isAuthed(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { id, status } = await req.json()
   if (!id || !status) return NextResponse.json({ error: 'Missing params' }, { status: 400 })
 
@@ -74,9 +84,9 @@ async function sendShippingNotification({
   const itemRows = items.map(i =>
     `<tr>
       <td style="padding:8px 0;border-bottom:1px solid #e0d8cc;font-size:13px;color:#3a4040;">
-        ${i.name}${i.variant ? ` (${i.variant})` : i.size ? ` (${i.size})` : ''}
+        ${escapeHtml(i.name)}${i.variant ? ` (${escapeHtml(i.variant)})` : i.size ? ` (${escapeHtml(i.size)})` : ''}
       </td>
-      <td style="padding:8px 0;border-bottom:1px solid #e0d8cc;font-size:13px;color:#3a4040;text-align:center;">${i.quantity}</td>
+      <td style="padding:8px 0;border-bottom:1px solid #e0d8cc;font-size:13px;color:#3a4040;text-align:center;">${Number(i.quantity)}</td>
       <td style="padding:8px 0;border-bottom:1px solid #e0d8cc;font-size:13px;color:#3a4040;text-align:right;">¥${(i.price * i.quantity).toLocaleString()}</td>
     </tr>`
   ).join('')
@@ -96,7 +106,7 @@ async function sendShippingNotification({
           <h2 style="font-size:20px;font-weight:300;letter-spacing:4px;color:#3a4040;margin-bottom:4px;">BEACH Hairsalon & cafe</h2>
           <p style="font-size:11px;letter-spacing:3px;color:#8a7e70;margin-bottom:32px;">SHIPPING NOTIFICATION</p>
 
-          <p style="font-size:13px;color:#5a6e6e;margin-bottom:8px;">${name} 様</p>
+          <p style="font-size:13px;color:#5a6e6e;margin-bottom:8px;">${escapeHtml(name)} 様</p>
           <p style="font-size:13px;color:#5a6e6e;line-height:2;margin-bottom:32px;">
             ご注文の商品を発送いたしました。<br>
             到着まで今しばらくお待ちください。

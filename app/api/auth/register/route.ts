@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { signMemberCookie } from '@/lib/memberCookie'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,6 +12,23 @@ export async function POST(req: NextRequest) {
 
   if (!email || !name) {
     return NextResponse.json({ error: '名前とメールアドレスは必須です' }, { status: 400 })
+  }
+
+  // メールOTP検証済みであることを必須にする（直近30分以内に検証成功した記録があるか）
+  // /api/auth/otp/verify が used=true にマークしたレコードのみ有効とみなす
+  const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
+  const { data: verification } = await supabaseAdmin
+    .from('email_verifications')
+    .select('id, created_at')
+    .eq('email', email)
+    .eq('used', true)
+    .gte('created_at', thirtyMinAgo)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!verification) {
+    return NextResponse.json({ error: 'メールアドレスの確認が完了していません。認証コードを再送信してください。' }, { status: 403 })
   }
 
   // メール重複チェック
@@ -61,8 +79,9 @@ export async function POST(req: NextRequest) {
   }
 
   const res = NextResponse.json({ ok: true, member: data })
-  res.cookies.set('hp_member', JSON.stringify(data), {
+  res.cookies.set('hp_member', signMemberCookie(data), {
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 24 * 30, // 30日
     sameSite: 'lax',
     path: '/',

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { verifyMemberCookie } from '@/lib/memberCookie'
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,13 +9,8 @@ const admin = createClient(
 
 function getMember(req: NextRequest): { id: string; name: string } | null {
   const raw = req.cookies.get('hp_member')?.value
-  if (!raw) return null
-  try {
-    const data = JSON.parse(raw)
-    return data.id ? { id: data.id, name: data.name ?? '' } : null
-  } catch {
-    return null
-  }
+  const data = verifyMemberCookie(raw)
+  return typeof data?.id === 'string' ? { id: data.id, name: typeof data.name === 'string' ? data.name : '' } : null
 }
 
 async function notifySho(text: string) {

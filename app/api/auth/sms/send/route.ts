@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { randomInt } from 'crypto'
+import { checkRateLimit, getClientIp } from '@/lib/redis'
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,8 +19,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '電話番号が正しくありません（ハイフンなし10〜11桁）' }, { status: 400 })
   }
 
-  // 6桁コード生成
-  const code = String(Math.floor(100000 + Math.random() * 900000))
+  // レート制限：同一電話番号5回/1時間、同一IP10回/1時間（SMS爆撃対策）
+  const ip = getClientIp(req)
+  const [phoneOk, ipOk] = await Promise.all([
+    checkRateLimit(`sms-send:phone:${normalized}`, 5, 60 * 60),
+    checkRateLimit(`sms-send:ip:${ip}`, 10, 60 * 60),
+  ])
+  if (!phoneOk || !ipOk) {
+    return NextResponse.json({ error: 'リクエストが多すぎます。しばらく時間をおいてお試しください' }, { status: 429 })
+  }
+
+  // 6桁コード生成（暗号学的乱数）
+  const code = String(randomInt(100000, 1000000))
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10分
 
   // DBに保存（同じ番号は上書き）

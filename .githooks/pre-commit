@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Secret-leak prevention hook.
+# Enable once per local clone:
+#   git config core.hooksPath .githooks
+#
+# Background: a LINE Login channel secret was once hardcoded under
+# supabase/functions and committed to git history (found 2026-06-21).
+# This hook is a best-effort guard against that recurring. It is not
+# a full secret scanner -- it only catches a few common patterns.
+
+set -eo pipefail
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -vE 'package-lock\.json|\.lock$' || true)
+[ -z "$STAGED" ] && exit 0
+
+COMBINED_PATTERN='sk_live_[A-Za-z0-9]{10,}|sk_test_[A-Za-z0-9]{10,}|rk_live_[A-Za-z0-9]{10,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|(SECRET|TOKEN|API_KEY|PASSWORD)[A-Za-z_]*[[:space:]]*[:=][[:space:]]*"[A-Za-z0-9]{32,}"'
+
+FOUND=0
+for f in $STAGED; do
+  [ -f "$f" ] || continue
+  MATCHES=$(git diff --cached -U0 -- "$f" | grep -E '^\+' | grep -vE '^\+\+\+' | grep -E "$COMBINED_PATTERN" || true)
+  if [ -n "$MATCHES" ]; then
+    echo "BLOCKED: possible secret in $f"
+    echo "$MATCHES"
+    FOUND=1
+  fi
+done
+
+if [ "$FOUND" -eq 1 ]; then
+  echo ""
+  echo "Commit blocked. If this is a false positive, ask the secretary session for help."
+  echo "If it is a real secret: move it to an env var and manage the value via Vault."
+  exit 1
+fi
+
+exit 0

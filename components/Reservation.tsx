@@ -246,13 +246,17 @@ export default function Reservation() {
       .then(r => r.json())
       .then(d => { setAvailability(d.availability ?? {}); setLoadingSlots(false) })
       .catch(() => setLoadingSlots(false))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // weekDatesはweekStartから毎レンダー再生成される配列のため依存配列に含めない（含めると無限ループになる）
   }, [weekStart, step, totalBlock])
 
   const toggleBookmark = (id: string) => {
     setBookmarks(prev => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
       localStorage.setItem('reservation_bookmarks', JSON.stringify([...next]))
       return next
     })

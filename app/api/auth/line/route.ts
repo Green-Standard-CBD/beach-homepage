@@ -13,8 +13,9 @@ export async function GET(req: NextRequest) {
   url.searchParams.set('state', state)
   url.searchParams.set('scope', 'profile')
 
+  const secure = process.env.NODE_ENV === 'production'
   const res = NextResponse.redirect(url.toString())
-  res.cookies.set('line_oauth_state', state, { httpOnly: true, maxAge: 300, sameSite: 'lax', path: '/' })
-  res.cookies.set('line_return_to', from,  { httpOnly: true, maxAge: 300, sameSite: 'lax', path: '/' })
+  res.cookies.set('line_oauth_state', state, { httpOnly: true, secure, maxAge: 300, sameSite: 'lax', path: '/' })
+  res.cookies.set('line_return_to', from,  { httpOnly: true, secure, maxAge: 300, sameSite: 'lax', path: '/' })
   return res
 }

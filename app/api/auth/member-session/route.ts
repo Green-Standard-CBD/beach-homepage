@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyMemberCookie } from '@/lib/memberCookie'
 
 export async function GET(req: NextRequest) {
   const cookieValue = req.cookies.get('hp_member')?.value
-  if (!cookieValue) {
+  const member = verifyMemberCookie(cookieValue)
+  if (!member) {
     return NextResponse.json({ ok: false }, { status: 401 })
   }
-  try {
-    const member = JSON.parse(cookieValue)
-    return NextResponse.json({ ok: true, member })
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 400 })
-  }
+  return NextResponse.json({ ok: true, member })
 }
 
 export async function DELETE() {

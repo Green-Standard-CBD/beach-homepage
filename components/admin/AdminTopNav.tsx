@@ -16,8 +16,9 @@ export default function AdminTopNav() {
   const pathname = usePathname()
   const router   = useRouter()
 
-  function logout() {
-    document.cookie = 'admin_auth=; Max-Age=0; path=/'
+  async function logout() {
+    // admin_authはhttpOnlyのためdocument.cookie側からは削除できない。サーバーAPI経由で失効させる。
+    await fetch('/api/admin/logout', { method: 'POST' })
     router.push('/admin/login')
   }
 

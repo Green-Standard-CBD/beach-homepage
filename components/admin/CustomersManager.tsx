@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import AdminTopNav from './AdminTopNav'
 
 type Member = {
@@ -78,7 +77,6 @@ function formatNum(n: number) {
 }
 
 export default function CustomersManager() {
-  const router = useRouter()
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [searchName, setSearchName] = useState('')

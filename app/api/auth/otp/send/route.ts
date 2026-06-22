@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { randomInt } from 'crypto'
+import { checkRateLimit, getClientIp } from '@/lib/redis'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,8 +14,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'メールアドレスが正しくありません' }, { status: 400 })
   }
 
-  // 8桁ランダムコード生成
-  const code = String(Math.floor(10000000 + Math.random() * 90000000))
+  // レート制限：同一メール5回/1時間、同一IP10回/1時間
+  const ip = getClientIp(req)
+  const [emailOk, ipOk] = await Promise.all([
+    checkRateLimit(`otp-send:email:${email}`, 5, 60 * 60),
+    checkRateLimit(`otp-send:ip:${ip}`, 10, 60 * 60),
+  ])
+  if (!emailOk || !ipOk) {
+    return NextResponse.json({ error: 'リクエストが多すぎます。しばらく時間をおいてお試しください' }, { status: 429 })
+  }
+
+  // 8桁ランダムコード生成（暗号学的乱数）
+  const code = String(randomInt(10000000, 100000000))
 
   // 既存の未使用コードを無効化
   await supabaseAdmin

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { signMemberCookie } from '@/lib/memberCookie'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -66,7 +67,7 @@ export async function GET(req: NextRequest) {
     .eq('line_id', lineId)
     .single()
 
-  const memberData = JSON.stringify({
+  const memberData = {
     lineId,
     name: member?.name ?? displayName,
     email: member?.email ?? '',
@@ -77,7 +78,7 @@ export async function GET(req: NextRequest) {
     address_line1: member?.address_line1 ?? '',
     address_line2: member?.address_line2 ?? '',
     is_member: !!member,
-  })
+  }
 
   const returnTo = req.cookies.get('line_return_to')?.value ?? 'checkout'
 
@@ -93,8 +94,9 @@ export async function GET(req: NextRequest) {
     const res = NextResponse.redirect(new URL('/mypage', req.url))
     res.cookies.delete('line_oauth_state')
     res.cookies.delete('line_return_to')
-    res.cookies.set('hp_member', JSON.stringify({ id: member.id, name: member.name ?? displayName, phone: member.phone ?? '', email: member.email ?? '' }), {
+    res.cookies.set('hp_member', signMemberCookie({ id: member.id, name: member.name ?? displayName, phone: member.phone ?? '', email: member.email ?? '' }), {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 7,
       sameSite: 'lax',
       path: '/',
@@ -107,8 +109,9 @@ export async function GET(req: NextRequest) {
   const res = NextResponse.redirect(new URL(dest, req.url))
   res.cookies.delete('line_oauth_state')
   res.cookies.delete('line_return_to')
-  res.cookies.set('line_member', memberData, {
+  res.cookies.set('line_member', signMemberCookie(memberData), {
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 300,
     sameSite: 'lax',
     path: '/',

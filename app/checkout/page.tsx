@@ -23,24 +23,15 @@ type Step = 'select' | 'otp_email' | 'otp_verify' | 'address' | 'payment'
 type LoginMode = 'guest' | 'member'
 
 // ─── Stripe決済フォーム ──────────────────────────────────────────────
+// items/guest情報/住所は/api/checkout時点でpending_ordersにサーバー側保存済みのため、
+// このフォームから/api/ordersへ送る必要があるのはpayment_intent_idのみ。
+// billing_details用にguestName/guestEmailだけは引き続き受け取る。
 function CheckoutForm({
-  total, shipping, grandTotal,
-  guestName, guestEmail, guestPhone,
-  postalCode, prefecture, city, addressLine1, addressLine2,
-  items, clientSecret, isGuest, onOrderComplete,
+  grandTotal, guestName, guestEmail, clientSecret, isGuest, onOrderComplete,
 }: {
-  total: number
-  shipping: number
   grandTotal: number
   guestName: string
   guestEmail: string
-  guestPhone: string
-  postalCode: string
-  prefecture: string
-  city: string
-  addressLine1: string
-  addressLine2: string
-  items: { id: string; name: string; price: number; variant: string | null; quantity: number }[]
   clientSecret: string
   isGuest: boolean
   onOrderComplete: () => void
@@ -80,7 +71,7 @@ function CheckoutForm({
     }
 
     try {
-      const { error: confirmError } = await stripe.confirmCardPayment(
+      const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
         clientSecret,
         {
           payment_method: {
@@ -90,29 +81,18 @@ function CheckoutForm({
         }
       )
 
-      if (confirmError) {
-        setError(confirmError.message ?? '決済に失敗しました')
+      if (confirmError || !paymentIntent) {
+        setError(confirmError?.message ?? '決済に失敗しました')
         setLoading(false)
         return
       }
 
+      // items/guest情報/住所は再送しない。/api/checkout時点でpending_ordersに
+      // 保存済みの内容をサーバー側が正として使う（payment_intent_idのみで足りる）
       const orderRes = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, variant: i.variant ?? null })),
-          subtotal: total,
-          shipping,
-          total: grandTotal,
-          guest_name: guestName,
-          guest_email: guestEmail,
-          guest_phone: guestPhone,
-          postal_code: postalCode,
-          prefecture,
-          city,
-          address_line1: addressLine1,
-          address_line2: addressLine2,
-        }),
+        body: JSON.stringify({ payment_intent_id: paymentIntent.id }),
       })
 
       const orderData = await orderRes.json()
@@ -184,7 +164,7 @@ function CheckoutForm({
 
 // ─── チェックアウト本体（useSearchParams使用のため Suspense 内で使用） ─
 function CheckoutContent() {
-  const { items, hydrated, total, shipping, grandTotal } = useCart()
+  const { items, hydrated, shipping, grandTotal } = useCart()
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -322,17 +302,14 @@ function CheckoutContent() {
       }
 
       if (isMember) {
-        const memberRes = await fetch('/api/auth/member-lookup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: memberPhone }),
-        })
-        const memberData = await memberRes.json()
-        if (!memberRes.ok || !memberData.member) {
-          setOtpError(memberData.error ?? '会員情報が見つかりません。先に会員登録をお願いします。')
+        // OTP検証済みのsms/verifyレスポンスに会員情報（住所含む）が同梱されている。
+        // 別途member-lookup（電話番号だけでPIIを返す未認証API）を呼ぶ必要はない。
+        // member-lookup APIは認証なしでPIIを返す脆弱性があったため廃止済み。
+        const m = data.member
+        if (!m || !m.id) {
+          setOtpError('会員情報が見つかりません。先に会員登録をお願いします。')
           return
         }
-        const m = memberData.member
         setGuestName(m.name ?? '')
         setGuestEmail(m.email ?? '')
         setGuestPhone(memberPhone.replace(/[-\s]/g, ''))
@@ -380,7 +357,17 @@ function CheckoutContent() {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: grandTotal, items }),
+        body: JSON.stringify({
+          items: items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, variant: i.variant ?? null })),
+          guest_name: guestName,
+          guest_email: guestEmail,
+          guest_phone: guestPhone,
+          postal_code: postalCode,
+          prefecture,
+          city,
+          address_line1: addressLine1,
+          address_line2: addressLine2,
+        }),
       })
       const { clientSecret: cs, error } = await res.json()
       if (error || !cs) {
@@ -764,18 +751,9 @@ function CheckoutContent() {
               }}
             >
               <CheckoutForm
-                total={total}
-                shipping={shipping}
                 grandTotal={grandTotal}
                 guestName={guestName}
                 guestEmail={guestEmail}
-                guestPhone={guestPhone}
-                postalCode={postalCode}
-                prefecture={prefecture}
-                city={city}
-                addressLine1={addressLine1}
-                addressLine2={addressLine2}
-                items={items}
                 clientSecret={clientSecret}
                 isGuest={loginMode === 'guest' && !searchParams.get('method')}
                 onOrderComplete={() => setOrderCompleted(true)}

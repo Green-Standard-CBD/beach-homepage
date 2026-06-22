@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit, getClientIp } from '@/lib/redis'
+import { escapeHtml } from '@/lib/html'
 
 const adminClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -7,6 +9,11 @@ const adminClient = createClient(
 )
 
 export async function POST(req: NextRequest) {
+  const okRate = await checkRateLimit(`reserve:${getClientIp(req)}`, 20, 60 * 60)
+  if (!okRate) {
+    return NextResponse.json({ error: 'リクエストが多すぎます。しばらく時間をおいてお試しください' }, { status: 429 })
+  }
+
   const { name, phone, email, menu_id, menu_name, date, time, block_minutes, stylist_id } = await req.json()
 
   if (!name || !phone || !menu_id || !date || !time) {
@@ -24,10 +31,8 @@ export async function POST(req: NextRequest) {
 
   if (existing) {
     member_id = existing.id
-    // メールアドレスが入力された場合は会員情報に吸収
-    if (email) {
-      await adminClient.from('members').update({ email }).eq('id', existing.id)
-    }
+    // 注意：電話番号一致だけで既存会員のemailを上書きしない（本人確認なしのアカウント乗っ取り経路になるため、
+    // beach_security_full_audit_v1.md A-8で指摘済み）。emailの変更は別途認証済みのマイページ等から行う想定。
   } else {
     const { data: newMember, error: memberErr } = await adminClient
       .from('members')
@@ -137,7 +142,7 @@ async function sendReservationEmail({
           <h2 style="font-size:20px;font-weight:300;letter-spacing:4px;color:#3a4040;margin-bottom:4px;">BEACH Hairsalon & cafe</h2>
           <p style="font-size:11px;letter-spacing:3px;color:#8a7e70;margin-bottom:32px;">予約完了のお知らせ</p>
 
-          <p style="font-size:13px;color:#5a6e6e;margin-bottom:8px;">${name} 様</p>
+          <p style="font-size:13px;color:#5a6e6e;margin-bottom:8px;">${escapeHtml(name)} 様</p>
           <p style="font-size:13px;color:#5a6e6e;line-height:2;margin-bottom:32px;">
             ご予約ありがとうございます。<br>
             以下の内容でご予約を承りました。
@@ -145,10 +150,10 @@ async function sendReservationEmail({
 
           <table style="width:100%;border-collapse:collapse;margin-bottom:32px;">
             ${[
-              ['来店日時', `${dateLabel}　${time}〜（約${block_minutes}分）`],
-              ['メニュー', menu_name],
-              ['スタイリスト', stylistLabel],
-              ['ご予約者', `${name} 様`],
+              ['来店日時', `${escapeHtml(dateLabel)}　${escapeHtml(time)}〜（約${Number(block_minutes)}分）`],
+              ['メニュー', escapeHtml(menu_name)],
+              ['スタイリスト', escapeHtml(stylistLabel)],
+              ['ご予約者', `${escapeHtml(name)} 様`],
             ].map(([label, value]) => `
               <tr>
                 <td style="padding:10px 0;border-bottom:1px solid #e0d8cc;font-size:11px;letter-spacing:2px;color:#8a7e70;width:100px;">${label}</td>
