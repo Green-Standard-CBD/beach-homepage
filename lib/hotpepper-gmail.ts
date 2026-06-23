@@ -25,6 +25,16 @@ export type HotpepperEmail = {
   amount: number | null
 }
 
+export type ParseFailure = {
+  gmailId: string
+  reason: string
+}
+
+export type FetchHotpepperEmailsResult = {
+  emails: HotpepperEmail[]
+  parseFailures: ParseFailure[]
+}
+
 // 店のメニュー基準によるブロック時間（Hotpepperの施術時間目安は使わない）
 function getShopBlockMinutes(menuSection: string): number {
   const t = menuSection
@@ -83,8 +93,21 @@ function parseDate(text: string): { date: string; time: string } | null {
   }
 }
 
-function parseEmail(body: string): Omit<HotpepperEmail, 'gmailId'> | null {
-  const isCancel = body.includes('ご予約のキャンセルがありました')
+// CANCEL_PHRASE: Hotpepper(Salon Board)の現行キャンセル通知メールで確認済みの固定文言。
+// 表記揺れ検知：本文に「キャンセル」という語自体は含まれるがこの固定文言と一致しない場合、
+// type='new'として処理してしまう前に呼び出し元へ警告を返す（撃ち漏らし防止）。
+const CANCEL_PHRASE = 'ご予約のキャンセルがありました'
+
+function parseEmail(body: string): { email: Omit<HotpepperEmail, 'gmailId'> | null; failReason: string | null } {
+  const isCancel = body.includes(CANCEL_PHRASE)
+  const mentionsCancelWord = /キャンセル/.test(body)
+  if (mentionsCancelWord && !isCancel) {
+    // 固定文言と完全一致しないキャンセル関連メール＝表記揺れの可能性。
+    // 誤ってtype='new'扱い（誤った新規予約登録）になるため、運用で気づけるようログに残す。
+    console.error(
+      `[hotpepper-gmail] ambiguous cancel wording: body contains "キャンセル" but not the expected fixed phrase "${CANCEL_PHRASE}". This email will be treated as type='new'.`
+    )
+  }
   const type: 'new' | 'cancel' = isCancel ? 'cancel' : 'new'
 
   const reservationId = body.match(/■予約番号\s*\n\s*(\S+)/)?.[1]
@@ -94,10 +117,12 @@ function parseEmail(body: string): Omit<HotpepperEmail, 'gmailId'> | null {
   const stylistRaw = body.match(/■スタイリスト\s*\n\s*([^\n]+)/)?.[1]?.trim() ?? ''
   const amountRaw = body.match(/お支払い予定金額\s*(\d[\d,]+)円/)?.[1]
 
-  if (!reservationId || !guestName || !dateRaw) return null
+  if (!reservationId) return { email: null, failReason: 'missing reservationId (■予約番号 not matched)' }
+  if (!guestName) return { email: null, failReason: 'missing guestName (■氏名 not matched)' }
+  if (!dateRaw) return { email: null, failReason: 'missing dateRaw (■来店日時 not matched)' }
 
   const parsed = parseDate(dateRaw)
-  if (!parsed) return null
+  if (!parsed) return { email: null, failReason: `date parse failed for dateRaw="${dateRaw}"` }
 
   // ■メニューセクション全体を取得（次の■まで）
   const menuSectionMatch = body.match(/■メニュー\s*\n([\s\S]*?)(?=\n■)/)
@@ -110,40 +135,69 @@ function parseEmail(body: string): Omit<HotpepperEmail, 'gmailId'> | null {
   const amount = amountRaw ? parseInt(amountRaw.replace(/,/g, '')) : null
 
   return {
-    type,
-    reservationId,
-    guestName,
-    date: parsed.date,
-    time: parsed.time,
-    menuName,
-    blockMinutes,
-    stylistId,
-    amount,
+    email: {
+      type,
+      reservationId,
+      guestName,
+      date: parsed.date,
+      time: parsed.time,
+      menuName,
+      blockMinutes,
+      stylistId,
+      amount,
+    },
+    failReason: null,
   }
 }
 
-export async function fetchHotpepperEmails(since?: Date): Promise<HotpepperEmail[]> {
+export async function fetchHotpepperEmails(since?: Date): Promise<FetchHotpepperEmailsResult> {
   const gmail = getGmailClient()
 
   const afterDate = since
     ? Math.floor(since.getTime() / 1000)
     : Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 7 // 直近7日
 
-  const res = await gmail.users.messages.list({
-    userId: 'me',
-    q: `from:yoyaku_system@salonboard.com after:${afterDate}`,
-    maxResults: 50,
-  })
+  // ページネーション：nextPageTokenを辿って対象期間のメールを取りこぼさず全件取得する。
+  // MAX_PAGES（1ページ最大50件 × 20 = 最大1000件）で無限ループを防止。
+  // 万一MAX_PAGESに達してもnextPageTokenが残っている場合はログに残し、運用で気づけるようにする。
+  const MAX_PAGES = 20
+  const messageIds: string[] = []
+  let pageToken: string | undefined
+  let pageCount = 0
 
-  const messages = res.data.messages ?? []
-  const results: HotpepperEmail[] = []
+  do {
+    const res = await gmail.users.messages.list({
+      userId: 'me',
+      q: `from:yoyaku_system@salonboard.com after:${afterDate}`,
+      maxResults: 50,
+      pageToken,
+    })
+    const messages = res.data.messages ?? []
+    for (const m of messages) {
+      if (m.id) messageIds.push(m.id)
+    }
+    pageToken = res.data.nextPageToken ?? undefined
+    pageCount++
+  } while (pageToken && pageCount < MAX_PAGES)
 
-  for (const msg of messages) {
+  if (pageToken) {
+    console.error(
+      `[hotpepper-gmail] reached MAX_PAGES(${MAX_PAGES}) while nextPageToken still present. ` +
+      `Some emails in the search window may not have been fetched this run.`
+    )
+  }
+
+  // 受信日時(internalDate)でソートして処理するため、一時的に保持する
+  const emailsWithTimestamp: (HotpepperEmail & { _internalDate: number })[] = []
+  const parseFailures: ParseFailure[] = []
+
+  for (const gmailId of messageIds) {
     const detail = await gmail.users.messages.get({
       userId: 'me',
-      id: msg.id!,
+      id: gmailId,
       format: 'full',
     })
+    const internalDate = Number(detail.data.internalDate ?? 0)
 
     const payload = detail.data.payload
     let body = ''
@@ -159,11 +213,29 @@ export async function fetchHotpepperEmails(since?: Date): Promise<HotpepperEmail
       }
     }
 
-    const parsed = parseEmail(body)
-    if (parsed) {
-      results.push({ gmailId: msg.id!, ...parsed })
+    if (!body) {
+      const reason = 'empty body (no plain text part found)'
+      parseFailures.push({ gmailId, reason })
+      console.error(`[hotpepper-gmail] parse failure: gmailId=${gmailId} reason=${reason}`)
+      continue
+    }
+
+    const { email, failReason } = parseEmail(body)
+    if (email) {
+      emailsWithTimestamp.push({ gmailId, ...email, _internalDate: internalDate })
+    } else {
+      const reason = failReason ?? 'unknown'
+      parseFailures.push({ gmailId, reason })
+      console.error(`[hotpepper-gmail] parse failure: gmailId=${gmailId} reason=${reason}`)
     }
   }
 
-  return results
+  // 受信日時の古い順に処理することで、同一予約番号の new→cancel が逆順に処理され
+  // （キャンセル済みのはずの予約が後から新規insertされてしまう等）誤状態になるのを防ぐ。
+  // Gmail APIのmessages.listは新しい順で返るため、ここで明示的に並べ替えが必要。
+  emailsWithTimestamp.sort((a, b) => a._internalDate - b._internalDate)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const emails: HotpepperEmail[] = emailsWithTimestamp.map(({ _internalDate, ...e }) => e)
+
+  return { emails, parseFailures }
 }

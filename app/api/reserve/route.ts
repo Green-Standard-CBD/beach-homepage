@@ -108,6 +108,25 @@ export async function POST(req: NextRequest) {
     }).catch(() => {})
   }
 
+  // HP予約が実際に成立し、お客様・sho双方への通知処理が終わったこのタイミングでのみ、
+  // LINE bot側の予約flowState（rsv_flow）をクリアする。「ホームページで予約する」
+  // ボタン押下時点ではクリアしない（誤タップしてすぐ戻った場合にLINE予約フローを
+  // 継続できるようにするため）。失敗しても予約完了自体は失敗扱いにせず、ログのみ残す。
+  // 通知処理より後に置くことで、LINE bot側APIが遅い場合でも顧客通知・sho通知が
+  // 待たされないようにしている。
+  if (memberLineId) {
+    try {
+      const clearRes = await fetch('https://beach-line-bot.vercel.app/api/clear-flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` },
+        body: JSON.stringify({ userId: memberLineId }),
+      })
+      if (!clearRes.ok) console.error('clear-flow request failed:', clearRes.status)
+    } catch (e) {
+      console.error('clear-flow request error:', e)
+    }
+  }
+
   return NextResponse.json({ ok: true })
 }
 

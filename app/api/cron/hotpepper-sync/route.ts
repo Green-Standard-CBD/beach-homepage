@@ -27,9 +27,22 @@ export async function GET(request: Request) {
   }
 
   try {
-    const emails = await fetchHotpepperEmails()
-    const results = { inserted: 0, cancelled: 0, skipped: 0, errors: 0 }
+    const { emails, parseFailures } = await fetchHotpepperEmails()
+    const results = { inserted: 0, cancelled: 0, skipped: 0, errors: 0, parseFailed: parseFailures.length }
 
+    if (parseFailures.length > 0) {
+      // 個別の失敗理由はhotpepper-gmail.ts側で gmailId 付きですでにログ出力済み。
+      // ここではcron実行単位でのサマリをまとめて残し、運用で気づけるようにする。
+      console.error('[hotpepper-sync] parse failures this run:', JSON.stringify(parseFailures))
+    }
+
+    // 処理済み管理について（2026-06-23監査済み）：
+    // Gmail messageId単位の処理済みマーキングは別途持たず、7日間ウィンドウを毎回
+    // 再取得する設計だが、以下2点によりnew/cancelとも重複処理・二重通知は発生しない：
+    //   - new: hp_reservation_id のUNIQUE制約（DB側）が重複insertを23505で弾く
+    //   - cancel: .neq('status', 'cancelled') により、既にcancelled済みの予約は
+    //     0行ヒットでskip扱いになり、notifySho()の重複送信も起きない（冪等）
+    // そのため、追加の処理済み管理（Redis等）は現時点では不要と判断した。
     for (const email of emails) {
       if (email.type === 'new') {
         const { error } = await adminClient.from('reservations').insert({
@@ -82,7 +95,9 @@ export async function GET(request: Request) {
 
     // どのトリガー経由でも実行時刻を記録（admin自動同期の重複防止）
     await markHpSyncDone().catch(() => {})
-    return NextResponse.json({ ok: true, ...results })
+    // parseFailuresの詳細（gmailId・理由）もレスポンスに含め、cron実行ログから
+    // どのメールが撃ち漏らされたか後から追跡できるようにする。
+    return NextResponse.json({ ok: true, ...results, parseFailures })
   } catch (err) {
     console.error('Hotpepper sync error:', err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
