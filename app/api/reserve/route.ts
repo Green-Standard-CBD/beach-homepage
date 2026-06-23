@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
   if (lineToken && shoId) {
     const stylistLabel = stylist_id === 'fujino' ? '藤野翔' : '指名なし'
     const text = `📋 ホームページより新規予約を受け付けました\n\n${formatDate(date)} ${time}〜\n${menu_name}\nスタイリスト：${stylistLabel}\nお名前：${name}（${phone}）`
-    fetch('https://api.line.me/v2/bot/message/push', {
+    await fetch('https://api.line.me/v2/bot/message/push', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${lineToken}` },
       body: JSON.stringify({ to: shoId, messages: [{ type: 'text', text }] }),
