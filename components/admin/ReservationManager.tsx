@@ -685,7 +685,8 @@ function CapacityRows({ slotW, date, allReservations, blockedSlots }: {
   }
 
   function defaultCapacity(t: string) {
-    return isOccupiedAtSlot(t) ? 0 : 1
+    const isThu = new Date(date + 'T00:00:00').getDay() === 4
+    return (isThu || isOccupiedAtSlot(t)) ? 0 : 1
   }
 
   function handleChange(t: string, delta: number) {
@@ -1250,7 +1251,7 @@ function ScheduleView({
                   className="sticky left-0 z-10 flex-shrink-0 flex flex-col items-center justify-center border-r-2 border-sand-300 px-2 transition-colors bg-white cursor-pointer hover:bg-shore/5 group"
                   onClick={(e) => { e.stopPropagation(); onStaffClick(stylist) }}>
                   <span className="text-[11px] font-medium text-center leading-tight text-shore group-hover:underline">{stylist.name}</span>
-                  <span className="text-[10px] text-sand-300 mt-0.5">受付可能数: 1</span>
+                  <span className="text-[10px] text-sand-300 mt-0.5">受付可能数: {isThuDay ? 0 : 1}</span>
                 </div>
 
                 {/* 予約エリア */}
