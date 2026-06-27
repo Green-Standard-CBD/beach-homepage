@@ -6,11 +6,13 @@ import Products from '@/components/Products'
 import AppCTA from '@/components/AppCTA'
 import Access from '@/components/Access'
 import Footer from '@/components/Footer'
+import ScrollHandler from '@/components/ScrollHandler'
 
 export default function Home() {
   return (
     <>
       <Nav />
+      <ScrollHandler />
       <main>
         <StorySection />
         <Menu />

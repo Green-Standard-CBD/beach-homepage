@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCart } from '@/lib/cart'
 
@@ -15,10 +15,19 @@ const links = [
 
 export default function Nav() {
   const pathname = usePathname()
+  const router = useRouter()
   const isHomepage = pathname === '/'
   const [scrolled, setScrolled] = useState(!isHomepage)
   const [open, setOpen] = useState(false)
   const { count } = useCart()
+
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, anchor: string) => {
+    if (!isHomepage) {
+      e.preventDefault()
+      sessionStorage.setItem('pendingScroll', anchor.replace('#', ''))
+      router.push('/')
+    }
+  }
 
   useEffect(() => {
     if (!isHomepage) return
@@ -55,14 +64,18 @@ export default function Nav() {
 
         <nav className="hidden md:flex gap-10">
           {links.map((l) => {
-            const href = !isHomepage && l.href.startsWith('#') ? `/${l.href}` : l.href
             const cls = `text-[11px] tracking-[0.25em] transition-colors duration-300 ${
               scrolled ? 'text-shore hover:text-sand-400' : 'text-white/80 hover:text-white'
             }`
             return l.href.startsWith('#') ? (
-              <a key={l.href} href={href} className={cls}>{l.label}</a>
+              <a
+                key={l.href}
+                href={isHomepage ? l.href : `/${l.href}`}
+                className={cls}
+                onClick={(e) => handleAnchorClick(e, l.href)}
+              >{l.label}</a>
             ) : (
-              <Link key={l.href} href={href} className={cls}>{l.label}</Link>
+              <Link key={l.href} href={l.href} className={cls}>{l.label}</Link>
             )
           })}
         </nav>
@@ -120,12 +133,16 @@ export default function Nav() {
       {open && (
         <div className="md:hidden bg-cream border-t border-sand-200">
           {links.map((l) => {
-            const href = !isHomepage && l.href.startsWith('#') ? `/${l.href}` : l.href
             const cls = "block px-6 py-4 text-[11px] tracking-[0.25em] text-shore border-b border-sand-100 hover:bg-sand-100 transition-colors"
             return l.href.startsWith('#') ? (
-              <a key={l.href} href={href} onClick={() => setOpen(false)} className={cls}>{l.label}</a>
+              <a
+                key={l.href}
+                href={isHomepage ? l.href : `/${l.href}`}
+                className={cls}
+                onClick={(e) => { setOpen(false); handleAnchorClick(e, l.href) }}
+              >{l.label}</a>
             ) : (
-              <Link key={l.href} href={href} onClick={() => setOpen(false)} className={cls}>{l.label}</Link>
+              <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className={cls}>{l.label}</Link>
             )
           })}
         </div>
