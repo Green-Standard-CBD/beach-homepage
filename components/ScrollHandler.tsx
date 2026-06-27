@@ -11,7 +11,7 @@ export default function ScrollHandler() {
 
     const timer = setTimeout(() => {
       const el = document.getElementById(anchor)
-      if (el) el.scrollIntoView({ behavior: 'smooth' })
+      if (el) el.scrollIntoView({ behavior: 'instant' })
     }, 400)
 
     return () => clearTimeout(timer)
