@@ -37,15 +37,18 @@ export type Product = {
 }
 
 async function getProducts(): Promise<Product[]> {
+  // service role key を使用: products_select_admin ポリシーが anon では members テーブルを
+  // 参照できず permission denied になるため（RLS スプリント後の副作用）
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('products')
     .select('id, name, category, price, description, details, images, variants, sizes, ingredients, stock')
     .eq('is_active', true)
     .order('category')
+  if (error) console.error('[shop] products fetch error:', error)
   return (data as Product[]) ?? []
 }
 

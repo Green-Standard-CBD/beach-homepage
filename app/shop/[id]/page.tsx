@@ -10,16 +10,18 @@ async function getProduct(id: string): Promise<Product | null> {
   if (id.startsWith('plant-')) {
     return PLANT_PRODUCTS.find(p => p.id === id) ?? null
   }
+  // service role key を使用: 同 shop/page.tsx の理由（RLS スプリント後の副作用対応）
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('products')
     .select('id, name, category, price, description, details, images, variants, sizes, ingredients, stock')
     .eq('id', id)
     .eq('is_active', true)
     .single()
+  if (error && error.code !== 'PGRST116') console.error('[shop/id] product fetch error:', error)
   return (data as Product) ?? null
 }
 
